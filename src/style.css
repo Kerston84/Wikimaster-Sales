@@ -1,0 +1,127 @@
+/* ===== Notifications étendues ===== */
+.wmv-notif-root { width: min(440px, 92vw) !important; max-width: none !important; max-height: 80vh !important; }
+.wmv-notif-list { max-height: 68vh !important; }
+.wmv-nbar {
+  display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 10px 8px;
+  border-bottom: 1px solid rgba(255,255,255,.08); font-family: system-ui, sans-serif;
+}
+.wmv-chip {
+  border: 1px solid #3f3f46; background: #18181b; color: #d4d4d8; border-radius: 999px;
+  padding: 2px 9px; font-size: 11px; line-height: 18px; cursor: pointer;
+}
+.wmv-chip:hover { border-color: #71717a; }
+.wmv-chip.wmv-on { background: #14532d; border-color: #22c55e; color: #fff; }
+.wmv-chip.wmv-toggle { margin-left: auto; }
+
+/* couleur du type de notification */
+a[data-wmv-type="liste de souhaits"] > div > p:first-child { color: #f472b6 !important; }
+a[data-wmv-type="surenchéri"] > div > p:first-child { color: #fb923c !important; }
+a[data-wmv-type="enchère gagnée"] > div > p:first-child { color: #4ade80 !important; }
+a[data-wmv-type="enchère terminée"] > div > p:first-child { color: #a1a1aa !important; }
+
+.wmv-nbadge {
+  display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 6px;
+  font-size: 10px; line-height: 16px; letter-spacing: 0; text-transform: none; font-weight: 600; vertical-align: 1px;
+}
+a.wmv-done { opacity: .38; filter: grayscale(1); }
+a.wmv-done:hover { opacity: .75; }
+a.wmv-done .wmv-nbadge { background: #3f3f46; color: #e4e4e7; }
+a.wmv-maybe { opacity: .6; }
+a.wmv-maybe .wmv-nbadge { background: #422006; color: #fcd34d; }
+a.wmv-live .wmv-nbadge { background: #14532d; color: #bbf7d0; }
+/* notification déjà ouverte */
+a.wmv-checked { opacity: .45; filter: grayscale(1); }
+a.wmv-checked:hover { opacity: .8; }
+a.wmv-checked .wmv-nbadge { background: #3f3f46; color: #e4e4e7; }
+a.wmv-hidden { display: none !important; }
+
+/* ===== Bouton et panneau « Vente » ===== */
+.wmv-fab {
+  position: fixed; left: 14px; bottom: 14px; z-index: 2147483000;
+  padding: 7px 12px; border-radius: 999px; border: 1px solid #3f3f46;
+  background: #18181b; color: #fde68a; font: 600 13px system-ui, sans-serif; cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0,0,0,.45);
+}
+.wmv-fab:hover { border-color: #fbbf24; }
+.wmv-panel {
+  position: fixed; left: 14px; bottom: 58px; z-index: 2147483001;
+  width: min(680px, calc(100vw - 28px)); max-height: min(78vh, 760px);
+  display: flex; flex-direction: column;
+  background: #18181b; color: #e4e4e7; border: 1px solid #3f3f46; border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.6); font: 13px/1.4 system-ui, sans-serif; overflow: hidden;
+}
+.wmv-phead { display: flex; align-items: baseline; gap: 10px; padding: 12px 14px 8px; }
+.wmv-phead b { font-size: 15px; color: #fde68a; }
+.wmv-x { margin-left: auto; background: none; border: 0; color: #a1a1aa; font-size: 16px; cursor: pointer; }
+.wmv-x:hover { color: #fff; }
+.wmv-dim { color: #a1a1aa; font-size: 12px; }
+.wmv-sec { padding: 0 14px 8px; }
+.wmv-stitle { color: #a1a1aa; font-size: 12px; margin-bottom: 6px; }
+.wmv-rgrid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.wmv-rcell { background: #27272a; border-radius: 8px; padding: 5px 6px; text-align: center; border-top: 3px solid #71717a; }
+.wmv-rcell b { display: block; font-size: 14px; }
+.wmv-rname { font-size: 11px; font-weight: 700; color: #a1a1aa; }
+.wmv-r-C { border-color: #a3e6c3; } .wmv-r-PC { border-color: #93c5fd; } .wmv-r-R { border-color: #c4b5fd; }
+.wmv-r-SR { border-color: #f9a8d4; } .wmv-r-UR { border-color: #fb923c; } .wmv-r-L { border-color: #facc15; }
+.wmv-hint { color: #a1a1aa; font-size: 12px; margin-top: 6px; }
+.wmv-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 6px 14px; border-top: 1px solid #27272a; }
+.wmv-search, .wmv-select {
+  background: #09090b; color: #e4e4e7; border: 1px solid #3f3f46; border-radius: 8px; padding: 5px 8px; font: inherit;
+}
+.wmv-search { flex: 1 1 160px; min-width: 0; }
+.wmv-check { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; cursor: pointer; }
+.wmv-count { padding: 0 14px 6px; margin-top: 0; }
+.wmv-table-wrap { overflow: auto; flex: 1 1 auto; min-height: 80px; border-top: 1px solid #27272a; }
+.wmv-table { width: 100%; border-collapse: collapse; }
+.wmv-table th {
+  position: sticky; top: 0; background: #18181b; text-align: left; font-weight: 600; color: #a1a1aa;
+  font-size: 11px; padding: 6px 8px; border-bottom: 1px solid #27272a;
+}
+.wmv-table td { padding: 4px 8px; border-bottom: 1px solid #222225; white-space: nowrap; }
+.wmv-table td:nth-child(2) { white-space: normal; }
+.wmv-table tr.wmv-dup td:first-child { box-shadow: inset 3px 0 #fbbf24; }
+.wmv-rtag {
+  display: inline-block; min-width: 22px; margin-right: 6px; padding: 0 4px; border-radius: 4px;
+  background: #3f3f46; color: #18181b; font-size: 10px; font-weight: 700; text-align: center;
+}
+.wmv-rtag.wmv-r-C { background: #a3e6c3; } .wmv-rtag.wmv-r-PC { background: #93c5fd; } .wmv-rtag.wmv-r-R { background: #c4b5fd; }
+.wmv-rtag.wmv-r-SR { background: #f9a8d4; } .wmv-rtag.wmv-r-UR { background: #fb923c; } .wmv-rtag.wmv-r-L { background: #facc15; }
+.wmv-link { background: none; border: 0; padding: 0; color: #e4e4e7; font: inherit; cursor: pointer; text-align: left; }
+.wmv-link:hover { color: #fde68a; text-decoration: underline; }
+.wmv-approx { color: #a1a1aa; font-style: italic; }
+.wmv-pos { color: #4ade80; } .wmv-neg { color: #f87171; }
+.wmv-empty { padding: 18px 14px; color: #a1a1aa; }
+.wmv-foot { display: flex; gap: 10px; align-items: center; padding: 8px 14px; border-top: 1px solid #27272a; }
+.wmv-btn { background: #27272a; color: #e4e4e7; border: 1px solid #3f3f46; border-radius: 8px; padding: 5px 10px; font: inherit; cursor: pointer; white-space: nowrap; }
+.wmv-btn:hover { border-color: #71717a; }
+.wmv-toast {
+  position: fixed; left: 50%; top: 18px; transform: translateX(-50%); z-index: 2147483002;
+  background: #27272a; color: #fff; border: 1px solid #3f3f46; border-radius: 10px; padding: 8px 14px;
+  font: 13px system-ui, sans-serif; box-shadow: 0 8px 24px rgba(0,0,0,.5);
+}
+.wmv-flash { animation: wmv-flash 1.6s ease-out; border-radius: 16px; }
+@keyframes wmv-flash { 0%, 40% { box-shadow: 0 0 0 4px #fbbf24, 0 0 24px #fbbf24; } 100% { box-shadow: none; } }
+@media (max-width: 640px) { .wmv-rgrid { grid-template-columns: repeat(3, 1fr); } }
+
+/* tri et guide */
+.wmv-sort { cursor: pointer; user-select: none; }
+.wmv-sort:hover, .wmv-sorted { color: #fde68a !important; }
+.wmv-quick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; width: 100%; }
+.wmv-btn.wmv-on { background: #14532d; border-color: #22c55e; color: #fff; }
+.wmv-guide { margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: #1e1b4b; border: 1px solid #4338ca; font-size: 12px; }
+.wmv-step { margin-top: 4px; color: #e0e7ff; }
+.wmv-step-ok { color: #86efac; }
+
+
+/* flèches ‹ › dans la fiche d'une carte */
+.wmv-nav {
+  position: fixed; top: 50%; transform: translateY(-50%); z-index: 60;
+  width: 48px; height: 72px; border-radius: 14px; border: 1px solid #3f3f46;
+  background: rgba(24, 24, 27, .85); color: #fde68a; font: 700 38px/1 system-ui, sans-serif; cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0,0,0,.5);
+}
+.wmv-nav:hover:not(:disabled) { border-color: #fbbf24; background: #27272a; }
+.wmv-nav:disabled { opacity: .25; cursor: default; }
+.wmv-nav-prev { left: max(8px, calc(50% - 336px - 64px)); }
+.wmv-nav-next { right: max(8px, calc(50% - 336px - 64px)); }
+@media (max-width: 820px) { .wmv-nav { top: auto; bottom: 16px; transform: none; } }
