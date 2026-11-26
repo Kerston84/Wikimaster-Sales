@@ -43,6 +43,14 @@ Quand tu ouvres une carte dans ta Collection, deux flèches apparaissent de chaq
 | **Exclusions** | Les cartes en **favori** et les cartes avec une **étiquette** sont exclues (deux cases à cocher). |
 | **Recherche, filtre par rareté, export CSV** | Pour retravailler la liste dans un tableur. |
 
+### ✓ Cartes vendues (onglet du panneau)
+Quand tu ouvres la cloche et qu'une notification dit « Votre carte « X » a été vendue pour N wikibidous », l'extension :
+- range la carte dans l'onglet **« ✓ Cartes vendues »** avec la date, l'heure, le prix d'achat, le prix de vente et le gain ;
+- la retire de l'onglet **« À vendre »** (ou enlève un exemplaire si tu en avais plusieurs) ;
+- ajoute « 💰 Rangée dans « Cartes vendues » · gain » sur la notification.
+
+Limite : le site ne garde qu'un nombre limité de notifications, pense à ouvrir la cloche de temps en temps. Prix d'achat inconnu = compté 0 (comme une carte de paquet).
+
 ---
 
 ## 🧭 Remplir le panneau
@@ -60,8 +68,9 @@ Télécharge le fichier qui correspond à ton navigateur dans le dossier [`telec
 
 | Navigateur | Fichier |
 |---|---|
-| Chrome, Brave, Edge | `wikimasters-vente-1.3.1-chrome-brave-edge.zip` |
-| Firefox | `wikimasters-vente-1.3.1-firefox.zip` |
+| Chrome, Brave, Edge | `wikimasters-vente-1.4.0-chrome-brave-edge.zip` |
+| Firefox | `wikimasters-vente-1.4.0-firefox.zip` |
+
 
 ### Chrome / Brave / Edge
 1. Clic droit sur le zip → **« Extraire tout »**. Range le dossier dans un endroit où tu ne le supprimeras pas (par ex. *Documents*).
@@ -83,6 +92,7 @@ Télécharge le fichier qui correspond à ton navigateur dans le dossier [`telec
 **Firefox** : recharge le nouveau zip depuis `about:debugging`.
 
 ## 🆕 Nouveautés
+- **1.4.0** : tes ventes. Une notification « Carte vendue » range la carte dans un nouvel onglet « ✓ Cartes vendues » du panneau (date, heure, prix d'achat, prix de vente, gain) et la retire de l'onglet « À vendre ».
 - **1.3.1** : une notification déjà ouverte est grisée avec « 👁 Vue ».
 - **1.3.0** : flèches ‹ › (et touches ← →) pour passer d'une carte à la suivante dans la fiche d'une carte, en gardant le même onglet.
 - **1.2.1** : dans les notifications « Souhaits », les enchères vendues sont grisées comme les non vendues (plus de rouge).

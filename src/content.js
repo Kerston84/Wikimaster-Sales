@@ -21,9 +21,10 @@
   // rarity   : prix moyens     { L: { avg, low, high, n, at } }
   // coll     : ta collection   { titre: { r, fav, tags: [], n: exemplaires, at, cid } }
   // prices   : prix de la carte, lu dans son onglet « Marché » { titre: { p: moyenne de la semaine, lo, hi, n: ventes, r, at } }
-  const KEYS = ['wmv-listings', 'wmv-buys', 'wmv-sales', 'wmv-rarity', 'wmv-coll', 'wmv-prices', 'wmv-settings'];
-  const DEFAULTS = { hideEnded: false, notifType: 'all', excludeTags: true, excludeFav: true, staleHours: 24, panelRarity: 'all', sortKey: 'ref', sortDir: 'desc' };
-  const db = { listings: {}, buys: {}, sales: {}, rarity: {}, coll: {}, prices: {}, settings: { ...DEFAULTS } };
+  // sold     : TES ventes, lues dans les notifications « Carte vendue » { idEnchère: { t: titre, p: prix de vente, at: date, buy: prix d'achat, r } }
+  const KEYS = ['wmv-listings', 'wmv-buys', 'wmv-sales', 'wmv-rarity', 'wmv-coll', 'wmv-prices', 'wmv-sold', 'wmv-settings'];
+  const DEFAULTS = { panelTab: 'active', hideEnded: false, notifType: 'all', excludeTags: true, excludeFav: true, staleHours: 24, panelRarity: 'all', sortKey: 'ref', sortDir: 'desc' };
+  const db = { listings: {}, buys: {}, sales: {}, rarity: {}, coll: {}, prices: {}, sold: {}, settings: { ...DEFAULTS } };
   const dirty = new Set();
   const ownWrites = {}; // nos propres écritures : on ne les relit pas (sinon on perdrait ce qui a changé entre-temps)
   let saveTimer = null;
@@ -47,6 +48,7 @@
     db.rarity = r['wmv-rarity'] || {};
     db.coll = r['wmv-coll'] || {};
     db.prices = r['wmv-prices'] || {};
+    db.sold = r['wmv-sold'] || {};
     db.settings = { ...DEFAULTS, ...(r['wmv-settings'] || {}) };
     prune();
   });
@@ -328,6 +330,7 @@
     ['surenchéri', 'Surenchéri'],
     ['enchère gagnée', 'Gagnées'],
     ['enchère terminée', 'Terminées'],
+    ['carte vendue', 'Vendues'],
   ];
   // les notifications = les liens vers une enchère, hors de la page principale, regroupés dans une même liste
   function notifLinks() {
@@ -368,6 +371,35 @@
     return h < 24 ? h + ' h ' + String(m % 60).padStart(2, '0') : Math.floor(h / 24) + ' j ' + (h % 24) + ' h';
   }
 
+  // une de TES cartes vendue (lu dans la notification, rien n'est demandé au jeu)
+  function addSold(id, text, when) {
+    if (db.sold[id]) return;
+    const m = text.match(/«\s*(.+?)\s*»\s*a été vendue pour\s*([\d\s  ]+)/);
+    if (!m) return;
+    const t = m[1], p = num(m[2]);
+    const at = when || Date.now();
+    const b = db.buys[t];
+    const c = db.coll[t] || {};
+    // prix d'achat : seulement s'il date d'avant la vente (sinon c'est un nouvel achat de la même carte)
+    db.sold[id] = { t, p, at, buy: b && (!b.at || b.at <= at + 60e3) ? b.p : null, r: c.r || (b && b.r) || null };
+    mark('sold');
+    setListing(id, { t, st: 'sold', p });
+  }
+  function soldGain(s) { return s.p != null ? s.p - (s.buy || 0) : null; }
+  // combien d'exemplaires de cette carte tu as vendus depuis que tu as vu ta collection (ou ton dernier achat)
+  function soldSince(title) {
+    const c = db.coll[title] || {};
+    const b = db.buys[title];
+    const since = Math.max(c.at || 0, (b && b.at) || 0);
+    let n = 0, last = 0;
+    for (const s of Object.values(db.sold)) {
+      if (s.t !== title) continue;
+      if (s.at > since) n++;
+      last = Math.max(last, s.at);
+    }
+    return { n, last };
+  }
+
   function decorateNotifications() {
     const links = notifLinks();
     if (!links.length) return;
@@ -394,12 +426,18 @@
         const l = db.listings[id];
         if (!l || !l.st || l.st === 'active') setListing(id, { st: 'ended' });
       }
+      // « Votre carte « X » a été vendue pour N wikibidous » : on la range dans « Cartes vendues »
+      if (id && type === 'carte vendue') addSold(id, text, when);
       if (id && type === 'liste de souhaits') {
         const t = (text.match(/^(.+?) vient d'être mise en vente/) || [])[1];
         if (t && !(db.listings[id] && db.listings[id].t)) setListing(id, { t });
       }
 
       let badge = '', cls = '';
+      if (id && type === 'carte vendue' && db.sold[id]) {
+        const g = soldGain(db.sold[id]);
+        badge = '💰 Rangée dans « Cartes vendues »' + (g != null ? ' · gain ' + (g > 0 ? '+' : '') + fmt(g) + ' W' : '');
+      }
       if (id && type === 'liste de souhaits') {
         const { s, l } = stateOf(id, when);
         if (s === 'done') {
@@ -534,14 +572,19 @@
       const c = db.coll[t] || {};
       const b = db.buys[t];
       const r = c.r || (b && b.r) || null;
+      // vendue : on enlève un exemplaire par vente ; plus aucun → elle passe dans « Cartes vendues »
+      const sold = soldSince(t);
+      const remain = (c.n || 1) - sold.n;
+      if (remain <= 0) continue;
       if (db.settings.excludeFav && c.fav) { excluded++; continue; }
       if (db.settings.excludeTags && c.tags && c.tags.length) { excluded++; continue; }
       if (db.settings.panelRarity !== 'all' && r !== db.settings.panelRarity) continue;
       const ref = refPrice(t);
       const buy = b ? b.p : null;
       const gain = ref.p != null ? ref.p - (buy || 0) : null;
-      const dup = (c.n || 1) > 1;
-      out.push({ t, r, buy, ref, gain, n: c.n || null, dup, fav: !!c.fav, tags: c.tags || [] });
+      const n = c.n ? remain : null;
+      const dup = remain > 1;
+      out.push({ t, r, buy, ref, gain, n, dup, fav: !!c.fav, tags: c.tags || [] });
     }
     // priorité : d'abord les doublons, puis le plus gros gain estimé
     sortRows(out);
@@ -585,6 +628,18 @@
     const x = el('button', 'wmv-x', '✕'); x.type = 'button'; x.title = 'Fermer'; x.onclick = closePanel;
     head.appendChild(x);
     p.appendChild(head);
+
+    // deux onglets : cartes à vendre / cartes vendues
+    const soldList = Object.values(db.sold);
+    const tabs = el('div', 'wmv-tabs');
+    for (const [k, label] of [['active', '🃏 À vendre'], ['sold', `✓ Cartes vendues (${soldList.length})`]]) {
+      const b = el('button', 'wmv-tab' + (db.settings.panelTab === k ? ' wmv-on' : ''), label);
+      b.type = 'button';
+      b.onclick = () => { db.settings.panelTab = k; mark('settings'); renderPanel(); };
+      tabs.appendChild(b);
+    }
+    p.appendChild(tabs);
+    if (db.settings.panelTab === 'sold') { renderSold(p, soldList); return; }
 
     const sec = el('div', 'wmv-sec');
     const nPrices = Object.values(db.prices).filter((x) => x.p != null).length;
@@ -695,6 +750,49 @@
     }
     renderTable();
     wrap.scrollTop = scrollTop;
+  }
+
+  // onglet « Cartes vendues » : tes ventes lues dans les notifications « Carte vendue »
+  function renderSold(p, list) {
+    const sec = el('div', 'wmv-sec');
+    const tot = list.reduce((a, s) => a + (s.p || 0), 0);
+    const known = list.filter((s) => s.buy != null);
+    const gain = known.reduce((a, s) => a + soldGain(s), 0);
+    sec.appendChild(el('div', 'wmv-guide', `${list.length} carte(s) vendue(s) · ${fmt(tot)} W encaissés` +
+      (known.length ? ` · gain ${gain > 0 ? '+' : ''}${fmt(gain)} W sur ${known.length} carte(s) dont tu connais le prix d'achat` : '')));
+    sec.appendChild(el('div', 'wmv-hint', 'Rempli tout seul quand tu ouvres tes notifications : chaque « Carte vendue » est retenue ici et la carte quitte l\'onglet « À vendre ». Pense à ouvrir tes notifications avant qu\'elles disparaissent.'));
+    p.appendChild(sec);
+    const wrap = el('div', 'wmv-table-wrap');
+    p.appendChild(wrap);
+    if (!list.length) {
+      wrap.appendChild(el('div', 'wmv-empty', 'Aucune vente retenue pour l\'instant. Ouvre la cloche des notifications : les « Carte vendue » s\'ajoutent ici.'));
+    } else {
+      const table = el('table', 'wmv-table wmv-sold-table');
+      const thead = el('tr');
+      for (const h of ['Carte', 'Vendue le', 'Achetée', 'Vendue', 'Gain']) thead.appendChild(el('th', null, h));
+      table.appendChild(thead);
+      for (const s of list.slice().sort((a, b) => b.at - a.at)) {
+        const tr = el('tr', 'wmv-soldrow');
+        const name = el('td');
+        if (s.r) name.appendChild(el('span', 'wmv-rtag wmv-r-' + s.r, s.r));
+        name.appendChild(el('span', null, s.t));
+        name.appendChild(el('span', 'wmv-soldtag', 'VENDUE'));
+        tr.appendChild(name);
+        const d = new Date(s.at);
+        tr.appendChild(el('td', null, d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) + ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })));
+        const buy = el('td', null, s.buy != null ? fmt(s.buy) : '—');
+        if (s.buy == null) buy.title = 'Prix d\'achat inconnu : ouvre Marché → « Gagnées » avant la vente pour qu\'il soit retenu (carte de paquet = gratuite)';
+        tr.appendChild(buy);
+        tr.appendChild(el('td', null, fmt(s.p)));
+        const g = soldGain(s);
+        tr.appendChild(el('td', g == null ? '' : g >= 0 ? 'wmv-pos' : 'wmv-neg', g == null ? '—' : (g > 0 ? '+' : '') + fmt(g)));
+        table.appendChild(tr);
+      }
+      wrap.appendChild(table);
+    }
+    const foot = el('div', 'wmv-foot');
+    foot.appendChild(el('span', 'wmv-dim', 'Prix d\'achat « — » = inconnu (compté comme 0 dans le gain, comme une carte de paquet). L\'extension n\'interroge jamais le jeu.'));
+    p.appendChild(foot);
   }
 
   function showCard(title) {
@@ -811,7 +909,7 @@
       decorateCardModal();
       ensureFab();
       if (panelOpen()) {
-        const key = JSON.stringify([Object.keys(db.coll).length, Object.keys(db.buys).length, Object.keys(db.prices).length, Object.keys(db.sales).length]);
+        const key = JSON.stringify([Object.keys(db.coll).length, Object.keys(db.buys).length, Object.keys(db.prices).length, Object.keys(db.sales).length, Object.keys(db.sold).length]);
         if (key !== lastPanelKey) { lastPanelKey = key; renderPanel(); }
       }
     } catch (e) {

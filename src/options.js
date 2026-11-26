@@ -1,6 +1,6 @@
 // Page de réglages de WikiMasters Vente
 const ext = globalThis.browser || globalThis.chrome;
-const KEYS = ['wmv-listings', 'wmv-buys', 'wmv-sales', 'wmv-rarity', 'wmv-coll', 'wmv-prices', 'wmv-settings'];
+const KEYS = ['wmv-listings', 'wmv-buys', 'wmv-sales', 'wmv-rarity', 'wmv-coll', 'wmv-prices', 'wmv-sold', 'wmv-settings'];
 const DEFAULTS = { hideEnded: false, notifType: 'all', excludeTags: true, excludeFav: true, staleHours: 24, panelRarity: 'all', sortKey: 'ref', sortDir: 'desc' };
 const $ = (id) => document.getElementById(id);
 
@@ -17,7 +17,7 @@ async function load() {
   $('excludeTags').checked = !!s.excludeTags;
   $('staleHours').value = s.staleHours;
   const count = (k) => Object.keys(r[k] || {}).length;
-  $('stats').textContent = `${count('wmv-coll')} carte(s) de ta collection · ${count('wmv-prices')} prix de carte relevés · ${count('wmv-buys')} prix d'achat · ` +
+  $('stats').textContent = `${count('wmv-coll')} carte(s) de ta collection · ${count('wmv-prices')} prix de carte relevés · ${count('wmv-sold')} carte(s) vendue(s) · ${count('wmv-buys')} prix d'achat · ` +
     `${count('wmv-sales')} carte(s) avec des ventes vues · ${count('wmv-listings')} enchère(s) suivie(s)`;
 }
 
