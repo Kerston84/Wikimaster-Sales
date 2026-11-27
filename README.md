@@ -70,8 +70,8 @@ Télécharge le fichier qui correspond à ton navigateur dans le dossier [`telec
 
 | Navigateur | Fichier |
 |---|---|
-| Chrome, Brave, Edge | `wikimasters-vente-1.6.0-chrome-brave-edge.zip` |
-| Firefox | `wikimasters-vente-1.6.0-firefox.zip` |
+| Chrome, Brave, Edge | `wikimasters-vente-1.6.1-chrome-brave-edge.zip` |
+| Firefox | `wikimasters-vente-1.6.1-firefox.zip` |
 
 
 ### Chrome / Brave / Edge
@@ -94,6 +94,7 @@ Télécharge le fichier qui correspond à ton navigateur dans le dossier [`telec
 **Firefox** : recharge le nouveau zip depuis `about:debugging`.
 
 ## 🆕 Nouveautés
+- **1.6.1** : la pastille de prix apparaît aussi sur les cartes elles-mêmes : étiquette « ● 120 W » sur chaque carte de la Collection dont le prix a été relevé, et sous le nom dans la fiche ouverte.
 - **1.6.0** : pastille de couleur à côté du prix de vente relevé : 🟢 moins de 6 mois, 🟠 plus de 6 mois, 🔴 plus d'un an. Rouvrir l'onglet « Marché » de la carte remet la pastille au vert.
 - **1.5.2** : les filtres par type (Souhaits, Surenchéri, Gagnées, Terminées, Vendues) n'affichent plus que leur type, même pour les notifications non lues. Les non lues restent protégées seulement contre les masquages automatiques (terminées, cliquées).
 - **1.5.1** : check-up des notifications. Une notification **non lue** n'est plus jamais cachée ni grisée (avant, un filtre resté actif pouvait cacher la notif « rouge »). Le filtre par type (Souhaits, Gagnées…) n'est plus mémorisé d'une page à l'autre. Un message « N notification(s) cachée(s) · Tout afficher » apparaît quand des notifs sont masquées. Grisé plus lisible.

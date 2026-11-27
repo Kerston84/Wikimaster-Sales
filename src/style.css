@@ -156,3 +156,13 @@ a.wmv-unread { opacity: 1 !important; filter: none !important; box-shadow: inset
 .wmv-age-green { background: #22c55e; box-shadow: 0 0 0 2px rgba(34,197,94,.2); }
 .wmv-age-orange { background: #f59e0b; box-shadow: 0 0 0 2px rgba(245,158,11,.2); }
 .wmv-age-red { background: #ef4444; box-shadow: 0 0 0 2px rgba(239,68,68,.2); }
+
+/* étiquette de prix sur la carte (Collection) et dans la fiche ouverte */
+.wmv-cprice, .wmv-mprice {
+  display: inline-flex; align-items: center; gap: 5px; padding: 1px 7px 1px 6px; border-radius: 999px;
+  background: rgba(10,10,12,.82); color: #fafafa; border: 1px solid rgba(255,255,255,.18);
+  font: 600 11px/16px system-ui, sans-serif; white-space: nowrap; pointer-events: auto; cursor: help;
+}
+.wmv-cprice { position: absolute; left: 8px; top: calc(45% - 24px); z-index: 35; }
+.wmv-mprice { margin-top: 6px; font-size: 12px; line-height: 18px; }
+.wmv-cprice .wmv-age, .wmv-mprice .wmv-age { margin-right: 0; }

@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent
 SRC = ROOT / 'src'
 DIST = ROOT / 'dist'
-VERSION = '1.6.0'
+VERSION = '1.6.1'
 
 base = {
     'manifest_version': 3,

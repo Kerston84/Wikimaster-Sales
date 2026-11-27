@@ -945,6 +945,41 @@
     goCard(e.key === 'ArrowLeft' ? -1 : 1);
   });
 
+  // ---------- 8. pastille du prix sur les cartes (Collection + fiche ouverte) ----------
+  function priceAge(at) {
+    const age = Date.now() - at;
+    return age >= 365 * DAY ? 'red' : age >= 182 * DAY ? 'orange' : 'green';
+  }
+  const AGE_TIP = { green: 'relevé il y a moins de 6 mois', orange: 'relevé il y a plus de 6 mois : rouvre l\'onglet « Marché »', red: 'relevé il y a plus d\'un an : rouvre l\'onglet « Marché »' };
+  // petite étiquette « ● 120 W » (rien si le prix de la carte n'a jamais été relevé)
+  function pricePill(host, title, cls) {
+    const pr = db.prices[title];
+    let pill = host.querySelector(':scope > .' + cls);
+    if (!pr || pr.p == null || !pr.at) { if (pill) pill.remove(); return; }
+    const k = priceAge(pr.at);
+    const text = fmt(pr.p) + ' W';
+    const tip = `Prix moyen de la semaine : ${text}, ${AGE_TIP[k]} (le ${new Date(pr.at).toLocaleDateString('fr-FR')}). WikiMasters Vente, non officiel.`;
+    if (!pill) { pill = el('span', cls); pill.appendChild(el('span', 'wmv-age')); pill.appendChild(el('span', 'wmv-pill-t')); host.appendChild(pill); }
+    const dot = pill.firstChild;
+    if (dot.className !== 'wmv-age wmv-age-' + k) dot.className = 'wmv-age wmv-age-' + k;
+    if (pill.lastChild.textContent !== text) pill.lastChild.textContent = text;
+    if (pill.title !== tip) pill.title = tip;
+  }
+  function decorateCardPrices() {
+    if (/^\/collection/.test(location.pathname)) {
+      for (const card of document.querySelectorAll('main .group')) {
+        const t = titleIn(card);
+        const host = card.firstElementChild;
+        if (t && host) pricePill(host, t, 'wmv-cprice');
+      }
+    }
+    const m = cardModal();
+    if (m) {
+      const h = m.ov.querySelector('.card-frame h2');
+      if (h && h.parentElement) pricePill(h.parentElement, h.textContent.trim(), 'wmv-mprice');
+    }
+  }
+
   // ---------- boucle principale ----------
   let timer = null;
   // au plus une lecture toutes les 300 ms (la page change sans arrêt : comptes à rebours…)
@@ -961,6 +996,7 @@
       readCollection();
       decorateNotifications();
       decorateCardModal();
+      decorateCardPrices();
       ensureFab();
       if (panelOpen()) {
         const key = JSON.stringify([Object.keys(db.coll).length, Object.keys(db.buys).length, Object.keys(db.prices).length, Object.keys(db.sales).length, Object.keys(db.sold).length]);
@@ -975,7 +1011,7 @@
     run();
     new MutationObserver((muts) => {
       // on ignore nos propres changements
-      if (muts.every((m) => [...m.addedNodes, ...m.removedNodes].every((n) => n.nodeType === 1 && /\bwmv-/.test(n.className || '')) || (m.target.closest && m.target.closest('.wmv-panel, .wmv-nbar, .wmv-nbadge')))) return;
+      if (muts.every((m) => [...m.addedNodes, ...m.removedNodes].every((n) => n.nodeType === 1 && /\bwmv-/.test(n.className || '')) || (m.target.closest && m.target.closest('.wmv-panel, .wmv-nbar, .wmv-nbadge, .wmv-cprice, .wmv-mprice')))) return;
       schedule();
     }).observe(document.body, { childList: true, subtree: true, characterData: true });
     setInterval(schedule, 30e3); // met à jour les « Encore 12 min »
