@@ -149,3 +149,4 @@ a.wmv-unread { opacity: 1 !important; filter: none !important; box-shadow: inset
   font-size: 11px; color: #fcd34d; padding-top: 2px;
 }
 .wmv-chip { font-size: 12px; }
+.wmv-notif-list > .wmv-hidden { display: none !important; }

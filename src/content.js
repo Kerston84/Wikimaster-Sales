@@ -472,11 +472,20 @@
       const hideDone = db.settings.hideEnded && (cls === 'wmv-done' || cls === 'wmv-sold' || cls === 'wmv-maybe');
       // réglage « supprimer les notifications une fois cliquées » : masquées chez toi (rien n'est effacé sur le site)
       const hideSeen = db.settings.hideClicked && checked;
-      const hide = !unread && (hideByType || hideDone || hideSeen);
+      // le filtre que tu choisis (Souhaits, Gagnées…) s'applique toujours ; seuls les masquages automatiques épargnent les non lues
+      const hide = hideByType || (!unread && (hideDone || hideSeen));
       if (!unread && !hideByType && hideSeen) hiddenSeen++;
       if (!unread && !hideByType && hideDone && !hideSeen) hiddenDone++;
       if (hide) hiddenAll++;
       a.classList.toggle('wmv-hidden', hide);
+    }
+    // les autres notifications du site (échange accepté…) : cachées quand tu filtres par type
+    const mine = new Set(links);
+    for (const o of list.children) {
+      if (mine.has(o)) continue;
+      const hideOther = notifFilter !== 'all';
+      o.classList.toggle('wmv-hidden', hideOther);
+      if (hideOther) hiddenAll++;
     }
     renderNotifBar(list, counts, hiddenDone, links.length, hiddenSeen, hiddenAll, unreadN);
   }
@@ -545,7 +554,7 @@
     if (hiddenAll) {
       const info = document.createElement('div');
       info.className = 'wmv-ninfo';
-      info.textContent = hiddenAll + ' notification(s) cachée(s) par tes filtres' + (unreadN ? ' · les non lues restent toujours visibles' : '') + ' ';
+      info.textContent = hiddenAll + ' notification(s) cachée(s) par tes filtres ';
       const all = document.createElement('button');
       all.type = 'button'; all.dataset.showall = '1'; all.className = 'wmv-chip wmv-on';
       all.textContent = 'Tout afficher';
