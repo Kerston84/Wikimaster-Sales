@@ -695,7 +695,7 @@
     g.appendChild(el('div', 'wmv-step', '2. Marché → « Gagnées » et « Historique » : tes prix d\'achat et tes ventes.'));
     g.appendChild(el('div', 'wmv-step wmv-dim', 'Le site interdit les lectures automatiques en série : l\'extension retient seulement ce que tu affiches.'));
     sec.appendChild(g);
-    sec.appendChild(el('div', 'wmv-hint', 'Prix de vente = prix moyen de la carte cette semaine (passe la souris dessus pour le détail), sinon la médiane de ses ventes que tu as vues. Gain = prix de vente − prix d\'achat (carte sortie d\'un paquet = gratuite).'));
+    sec.appendChild(el('div', 'wmv-hint', 'Prix de vente = prix moyen de la carte cette semaine (passe la souris dessus pour le détail), sinon la médiane de ses ventes que tu as vues. Gain = prix de vente − prix d\'achat (carte sortie d\'un paquet = gratuite). Pastille : 🟢 prix relevé il y a moins de 6 mois, 🟠 plus de 6 mois, 🔴 plus d\'un an.'));
     p.appendChild(sec);
 
     // filtres
@@ -785,6 +785,14 @@
         const ref = el('td', null, fmt(r.ref.p));
         ref.title = r.ref.src === 'carte' ? `Prix moyen de cette carte cette semaine (relevé le ${new Date(r.ref.at).toLocaleString('fr-FR')}). Sur la période affichée par le site : de ${fmt(r.ref.lo)} à ${fmt(r.ref.hi)} W, ${fmt(r.ref.n)} ventes.` : r.ref.src === 'ventes' ? `Médiane des dernières ventes vues de cette carte (${r.ref.n})` : 'Prix inconnu : ouvre l\'onglet « Marché » de cette carte';
         if (r.ref.src === 'ventes') ref.classList.add('wmv-approx');
+        // pastille d'âge du prix : verte (< 6 mois), orange (6 mois à 1 an), rouge (plus d'un an)
+        if (r.ref.src === 'carte' && r.ref.at) {
+          const age = Date.now() - r.ref.at;
+          const k = age >= 365 * DAY ? 'red' : age >= 182 * DAY ? 'orange' : 'green';
+          const dot = el('span', 'wmv-age wmv-age-' + k);
+          ref.insertBefore(dot, ref.firstChild);
+          ref.title += k === 'green' ? ' Pastille verte : relevé il y a moins de 6 mois.' : k === 'orange' ? ' Pastille orange : relevé il y a plus de 6 mois, rouvre son onglet « Marché ».' : ' Pastille rouge : relevé il y a plus d\'un an, rouvre son onglet « Marché ».';
+        }
         tr.appendChild(ref);
         const g = el('td', r.gain == null ? '' : r.gain >= 0 ? 'wmv-pos' : 'wmv-neg', r.gain == null ? '—' : (r.gain > 0 ? '+' : '') + fmt(r.gain));
         tr.appendChild(g);
