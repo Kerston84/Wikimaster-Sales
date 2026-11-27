@@ -1,7 +1,7 @@
 // Page de réglages de WikiMasters Vente
 const ext = globalThis.browser || globalThis.chrome;
 const KEYS = ['wmv-listings', 'wmv-buys', 'wmv-sales', 'wmv-rarity', 'wmv-coll', 'wmv-prices', 'wmv-sold', 'wmv-settings'];
-const DEFAULTS = { hideEnded: false, notifType: 'all', excludeTags: true, excludeFav: true, staleHours: 24, panelRarity: 'all', sortKey: 'ref', sortDir: 'desc' };
+const DEFAULTS = { panelTab: 'active', hideEnded: false, hideClicked: false, notifType: 'all', excludeTags: true, excludeFav: true, staleHours: 24, panelRarity: 'all', sortKey: 'ref', sortDir: 'desc' };
 const $ = (id) => document.getElementById(id);
 
 function status(text) {
@@ -13,6 +13,7 @@ async function load() {
   const r = await ext.storage.local.get(KEYS);
   const s = { ...DEFAULTS, ...(r['wmv-settings'] || {}) };
   $('hideEnded').checked = !!s.hideEnded;
+  $('hideClicked').checked = !!s.hideClicked;
   $('excludeFav').checked = !!s.excludeFav;
   $('excludeTags').checked = !!s.excludeTags;
   $('staleHours').value = s.staleHours;
@@ -25,13 +26,14 @@ async function saveSettings() {
   const r = await ext.storage.local.get('wmv-settings');
   const s = { ...DEFAULTS, ...(r['wmv-settings'] || {}) };
   s.hideEnded = $('hideEnded').checked;
+  s.hideClicked = $('hideClicked').checked;
   s.excludeFav = $('excludeFav').checked;
   s.excludeTags = $('excludeTags').checked;
   s.staleHours = Math.min(168, Math.max(1, parseInt($('staleHours').value, 10) || 24));
   await ext.storage.local.set({ 'wmv-settings': s });
   status('Enregistré ✓');
 }
-for (const id of ['hideEnded', 'excludeFav', 'excludeTags', 'staleHours']) $(id).addEventListener('change', saveSettings);
+for (const id of ['hideEnded', 'hideClicked', 'excludeFav', 'excludeTags', 'staleHours']) $(id).addEventListener('change', saveSettings);
 
 $('export').addEventListener('click', async () => {
   const r = await ext.storage.local.get(KEYS);

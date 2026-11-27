@@ -23,7 +23,7 @@
   // prices   : prix de la carte, lu dans son onglet « Marché » { titre: { p: moyenne de la semaine, lo, hi, n: ventes, r, at } }
   // sold     : TES ventes, lues dans les notifications « Carte vendue » { idEnchère: { t: titre, p: prix de vente, at: date, buy: prix d'achat, r } }
   const KEYS = ['wmv-listings', 'wmv-buys', 'wmv-sales', 'wmv-rarity', 'wmv-coll', 'wmv-prices', 'wmv-sold', 'wmv-settings'];
-  const DEFAULTS = { panelTab: 'active', hideEnded: false, notifType: 'all', excludeTags: true, excludeFav: true, staleHours: 24, panelRarity: 'all', sortKey: 'ref', sortDir: 'desc' };
+  const DEFAULTS = { panelTab: 'active', hideEnded: false, hideClicked: false, notifType: 'all', excludeTags: true, excludeFav: true, staleHours: 24, panelRarity: 'all', sortKey: 'ref', sortDir: 'desc' };
   const db = { listings: {}, buys: {}, sales: {}, rarity: {}, coll: {}, prices: {}, sold: {}, settings: { ...DEFAULTS } };
   const dirty = new Set();
   const ownWrites = {}; // nos propres écritures : on ne les relit pas (sinon on perdrait ce qui a changé entre-temps)
@@ -411,7 +411,7 @@
     }
 
     const counts = {};
-    let hiddenDone = 0;
+    let hiddenDone = 0, hiddenSeen = 0;
     for (const a of links) {
       const id = listingId(a);
       const type = notifType(a);
@@ -466,10 +466,13 @@
       const f = db.settings.notifType;
       const hideByType = f !== 'all' && type !== f;
       const hideDone = db.settings.hideEnded && (cls === 'wmv-done' || cls === 'wmv-sold' || cls === 'wmv-maybe');
-      if (hideDone && !hideByType) hiddenDone++;
-      a.classList.toggle('wmv-hidden', hideByType || hideDone);
+      // réglage « supprimer les notifications une fois cliquées » : masquées chez toi (rien n'est effacé sur le site)
+      const hideSeen = db.settings.hideClicked && checked;
+      if (hideSeen && !hideByType) hiddenSeen++;
+      if (hideDone && !hideByType && !hideSeen) hiddenDone++;
+      a.classList.toggle('wmv-hidden', hideByType || hideDone || hideSeen);
     }
-    renderNotifBar(list, counts, hiddenDone, links.length);
+    renderNotifBar(list, counts, hiddenDone, links.length, hiddenSeen);
   }
 
   // clic sur une notification : on la retient comme « vue »
@@ -479,9 +482,11 @@
     const id = listingId(a);
     if (id && !(db.listings[id] && db.listings[id].v)) { setListing(id, { v: 1 }); save(); }
     a.classList.add('wmv-checked');
+    // on la fait disparaître juste après le clic (le site a déjà reçu ton clic et ouvre l'enchère)
+    if (db.settings.hideClicked) setTimeout(() => { a.classList.add('wmv-hidden'); lastBar = ''; schedule(); }, 150);
   }, true);
 
-  function renderNotifBar(list, counts, hiddenDone, total) {
+  function renderNotifBar(list, counts, hiddenDone, total, hiddenSeen) {
     let bar = list.parentElement.querySelector(':scope > .wmv-nbar');
     if (!bar) {
       bar = document.createElement('div');
@@ -493,12 +498,13 @@
         e.preventDefault(); e.stopPropagation();
         if (btn.dataset.type) db.settings.notifType = btn.dataset.type;
         if (btn.dataset.toggle) db.settings.hideEnded = !db.settings.hideEnded;
+        if (btn.dataset.seen) db.settings.hideClicked = !db.settings.hideClicked;
         mark('settings');
         lastBar = '';
         decorateNotifications();
       });
     }
-    const key = JSON.stringify([counts, hiddenDone, total, db.settings.notifType, db.settings.hideEnded]);
+    const key = JSON.stringify([counts, hiddenDone, total, db.settings.notifType, db.settings.hideEnded, db.settings.hideClicked, hiddenSeen]);
     if (key === lastBar && bar.childElementCount) return;
     lastBar = key;
     bar.textContent = '';
@@ -518,6 +524,16 @@
     t.className = 'wmv-chip wmv-toggle' + (db.settings.hideEnded ? ' wmv-on' : '');
     t.textContent = db.settings.hideEnded ? '👁 Afficher les terminées' + (hiddenDone ? ' (' + hiddenDone + ')' : '') : '🙈 Masquer les terminées';
     bar.appendChild(t);
+    // case à cocher (un bouton ☐ / ☑ : un vrai <input> se cocherait deux fois dans ce menu)
+    const c = document.createElement('button');
+    c.type = 'button';
+    c.dataset.seen = '1';
+    c.className = 'wmv-chip wmv-seen' + (db.settings.hideClicked ? ' wmv-on' : '');
+    c.title = 'Masque chez toi les notifications déjà ouvertes (le site, lui, les garde)';
+    c.setAttribute('role', 'checkbox');
+    c.setAttribute('aria-checked', db.settings.hideClicked ? 'true' : 'false');
+    c.textContent = (db.settings.hideClicked ? '☑' : '☐') + ' Supprimer les notifs cliquées' + (db.settings.hideClicked && hiddenSeen ? ' (' + hiddenSeen + ')' : '');
+    bar.appendChild(c);
   }
   let lastBar = '';
 

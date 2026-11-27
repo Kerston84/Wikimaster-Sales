@@ -29,6 +29,8 @@ Fonctionne sur **Chrome, Brave, Edge** et **Firefox**.
 - une notification « Enchère terminée » ou « Enchère gagnée » en parle ;
 - sinon, la notification a plus de 24 h (réglable) : elle est marquée « ⌛ Sûrement terminée ».
 
+**Supprimer les notifs cliquées** : coche la case ☐ dans la barre de la cloche (ou dans les réglages de l'extension). Chaque notification que tu ouvres disparaît alors de ta liste. Décoche pour les revoir. Rien n'est effacé sur le site.
+
 ### ‹ › Flèches dans la fiche d'une carte (Collection)
 Quand tu ouvres une carte dans ta Collection, deux flèches apparaissent de chaque côté : **›** ouvre la carte suivante de la page, **‹** la précédente (ou les touches ← et → du clavier). L'onglet reste le même : si tu es sur « Marché », la carte suivante s'ouvre aussi sur « Marché », pratique pour relever les prix. La flèche fait seulement ce que tu ferais en cliquant sur la carte voisine.
 
@@ -68,8 +70,8 @@ Télécharge le fichier qui correspond à ton navigateur dans le dossier [`telec
 
 | Navigateur | Fichier |
 |---|---|
-| Chrome, Brave, Edge | `wikimasters-vente-1.4.0-chrome-brave-edge.zip` |
-| Firefox | `wikimasters-vente-1.4.0-firefox.zip` |
+| Chrome, Brave, Edge | `wikimasters-vente-1.5.0-chrome-brave-edge.zip` |
+| Firefox | `wikimasters-vente-1.5.0-firefox.zip` |
 
 
 ### Chrome / Brave / Edge
@@ -92,6 +94,7 @@ Télécharge le fichier qui correspond à ton navigateur dans le dossier [`telec
 **Firefox** : recharge le nouveau zip depuis `about:debugging`.
 
 ## 🆕 Nouveautés
+- **1.5.0** : case à cocher « Supprimer les notifs cliquées » (dans la cloche et dans les réglages) : une notification que tu as ouverte disparaît de ta liste au lieu d'être grisée. Elle disparaît seulement chez toi, le site la garde.
 - **1.4.0** : tes ventes. Une notification « Carte vendue » range la carte dans un nouvel onglet « ✓ Cartes vendues » du panneau (date, heure, prix d'achat, prix de vente, gain) et la retire de l'onglet « À vendre ».
 - **1.3.1** : une notification déjà ouverte est grisée avec « 👁 Vue ».
 - **1.3.0** : flèches ‹ › (et touches ← →) pour passer d'une carte à la suivante dans la fiche d'une carte, en gardant le même onglet.
