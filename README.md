@@ -70,8 +70,8 @@ Télécharge le fichier qui correspond à ton navigateur dans le dossier [`telec
 
 | Navigateur | Fichier |
 |---|---|
-| Chrome, Brave, Edge | `wikimasters-vente-1.5.0-chrome-brave-edge.zip` |
-| Firefox | `wikimasters-vente-1.5.0-firefox.zip` |
+| Chrome, Brave, Edge | `wikimasters-vente-1.5.1-chrome-brave-edge.zip` |
+| Firefox | `wikimasters-vente-1.5.1-firefox.zip` |
 
 
 ### Chrome / Brave / Edge
@@ -94,6 +94,7 @@ Télécharge le fichier qui correspond à ton navigateur dans le dossier [`telec
 **Firefox** : recharge le nouveau zip depuis `about:debugging`.
 
 ## 🆕 Nouveautés
+- **1.5.1** : check-up des notifications. Une notification **non lue** n'est plus jamais cachée ni grisée (avant, un filtre resté actif pouvait cacher la notif « rouge »). Le filtre par type (Souhaits, Gagnées…) n'est plus mémorisé d'une page à l'autre. Un message « N notification(s) cachée(s) · Tout afficher » apparaît quand des notifs sont masquées. Grisé plus lisible.
 - **1.5.0** : case à cocher « Supprimer les notifs cliquées » (dans la cloche et dans les réglages) : une notification que tu as ouverte disparaît de ta liste au lieu d'être grisée. Elle disparaît seulement chez toi, le site la garde.
 - **1.4.0** : tes ventes. Une notification « Carte vendue » range la carte dans un nouvel onglet « ✓ Cartes vendues » du panneau (date, heure, prix d'achat, prix de vente, gain) et la retire de l'onglet « À vendre ».
 - **1.3.1** : une notification déjà ouverte est grisée avec « 👁 Vue ».

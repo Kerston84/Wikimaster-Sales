@@ -135,3 +135,17 @@ a.wmv-hidden { display: none !important; }
 .wmv-soldtag { margin-left: 6px; font-size: 10px; font-weight: 700; letter-spacing: .04em; color: #86efac; background: #14532d; border-radius: 4px; padding: 1px 5px; }
 .wmv-sold-table td.wmv-pos { color: #4ade80; }
 .wmv-sold-table td.wmv-neg { color: #f87171; }
+
+/* ===== 1.5.1 : lisibilité ===== */
+/* grisé plus doux : le texte reste lisible, la pastille garde ses couleurs */
+a.wmv-done, a.wmv-checked { opacity: .62 !important; filter: grayscale(.85); }
+a.wmv-done:hover, a.wmv-checked:hover { opacity: .95 !important; filter: none; }
+.wmv-nbadge { font-size: 11px; line-height: 17px; }
+a[data-wmv-type="carte vendue"] > div > p:first-child { color: #fbbf24 !important; }
+/* non lue : bien visible */
+a.wmv-unread { opacity: 1 !important; filter: none !important; box-shadow: inset 3px 0 #22c55e; }
+.wmv-ninfo {
+  flex-basis: 100%; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  font-size: 11px; color: #fcd34d; padding-top: 2px;
+}
+.wmv-chip { font-size: 12px; }

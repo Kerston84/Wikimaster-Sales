@@ -411,7 +411,7 @@
     }
 
     const counts = {};
-    let hiddenDone = 0, hiddenSeen = 0;
+    let hiddenDone = 0, hiddenSeen = 0, hiddenAll = 0, unreadN = 0;
     for (const a of links) {
       const id = listingId(a);
       const type = notifType(a);
@@ -450,7 +450,7 @@
         else if (s === 'live') { cls = 'wmv-live'; badge = '⏱ Encore ' + left(l.end - Date.now()); }
       }
       // déjà ouverte (clic sur la notification ou page de l'enchère vue) : grisée aussi
-      const checked = !!(id && db.listings[id] && db.listings[id].v);
+      const checked = !!(id && db.listings[id] && db.listings[id].v) && !isUnread(a);
       a.classList.toggle('wmv-checked', checked && cls !== 'wmv-done');
       if (checked && cls !== 'wmv-done') badge = (badge ? badge + ' · ' : '') + '👁 Vue';
       a.classList.toggle('wmv-done', cls === 'wmv-done');
@@ -463,16 +463,22 @@
         if (b.textContent !== badge) b.textContent = badge;
       } else if (b) b.remove();
 
-      const f = db.settings.notifType;
+      // notification pas encore lue (le site la surligne) : jamais cachée, jamais grisée
+      const unread = isUnread(a);
+      a.classList.toggle('wmv-unread', unread);
+      if (unread) { a.classList.remove('wmv-done', 'wmv-checked', 'wmv-maybe'); unreadN++; }
+      const f = notifFilter;
       const hideByType = f !== 'all' && type !== f;
       const hideDone = db.settings.hideEnded && (cls === 'wmv-done' || cls === 'wmv-sold' || cls === 'wmv-maybe');
       // réglage « supprimer les notifications une fois cliquées » : masquées chez toi (rien n'est effacé sur le site)
       const hideSeen = db.settings.hideClicked && checked;
-      if (hideSeen && !hideByType) hiddenSeen++;
-      if (hideDone && !hideByType && !hideSeen) hiddenDone++;
-      a.classList.toggle('wmv-hidden', hideByType || hideDone || hideSeen);
+      const hide = !unread && (hideByType || hideDone || hideSeen);
+      if (!unread && !hideByType && hideSeen) hiddenSeen++;
+      if (!unread && !hideByType && hideDone && !hideSeen) hiddenDone++;
+      if (hide) hiddenAll++;
+      a.classList.toggle('wmv-hidden', hide);
     }
-    renderNotifBar(list, counts, hiddenDone, links.length, hiddenSeen);
+    renderNotifBar(list, counts, hiddenDone, links.length, hiddenSeen, hiddenAll, unreadN);
   }
 
   // clic sur une notification : on la retient comme « vue »
@@ -486,7 +492,7 @@
     if (db.settings.hideClicked) setTimeout(() => { a.classList.add('wmv-hidden'); lastBar = ''; schedule(); }, 150);
   }, true);
 
-  function renderNotifBar(list, counts, hiddenDone, total, hiddenSeen) {
+  function renderNotifBar(list, counts, hiddenDone, total, hiddenSeen, hiddenAll, unreadN) {
     let bar = list.parentElement.querySelector(':scope > .wmv-nbar');
     if (!bar) {
       bar = document.createElement('div');
@@ -496,7 +502,8 @@
         const btn = e.target.closest('button');
         if (!btn) return;
         e.preventDefault(); e.stopPropagation();
-        if (btn.dataset.type) db.settings.notifType = btn.dataset.type;
+        if (btn.dataset.type) notifFilter = btn.dataset.type; // filtre valable sur cette page seulement
+        if (btn.dataset.showall) { notifFilter = 'all'; db.settings.hideEnded = false; db.settings.hideClicked = false; }
         if (btn.dataset.toggle) db.settings.hideEnded = !db.settings.hideEnded;
         if (btn.dataset.seen) db.settings.hideClicked = !db.settings.hideClicked;
         mark('settings');
@@ -504,7 +511,7 @@
         decorateNotifications();
       });
     }
-    const key = JSON.stringify([counts, hiddenDone, total, db.settings.notifType, db.settings.hideEnded, db.settings.hideClicked, hiddenSeen]);
+    const key = JSON.stringify([counts, hiddenDone, total, notifFilter, db.settings.hideEnded, db.settings.hideClicked, hiddenSeen, hiddenAll, unreadN]);
     if (key === lastBar && bar.childElementCount) return;
     lastBar = key;
     bar.textContent = '';
@@ -514,7 +521,7 @@
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.dataset.type = k;
-      btn.className = 'wmv-chip' + (db.settings.notifType === k ? ' wmv-on' : '');
+      btn.className = 'wmv-chip' + (notifFilter === k ? ' wmv-on' : '');
       btn.textContent = label + ' ' + n;
       bar.appendChild(btn);
     }
@@ -534,7 +541,21 @@
     c.setAttribute('aria-checked', db.settings.hideClicked ? 'true' : 'false');
     c.textContent = (db.settings.hideClicked ? '☑' : '☐') + ' Supprimer les notifs cliquées' + (db.settings.hideClicked && hiddenSeen ? ' (' + hiddenSeen + ')' : '');
     bar.appendChild(c);
+    // explication quand des notifications sont cachées (sinon la liste paraît vide)
+    if (hiddenAll) {
+      const info = document.createElement('div');
+      info.className = 'wmv-ninfo';
+      info.textContent = hiddenAll + ' notification(s) cachée(s) par tes filtres' + (unreadN ? ' · les non lues restent toujours visibles' : '') + ' ';
+      const all = document.createElement('button');
+      all.type = 'button'; all.dataset.showall = '1'; all.className = 'wmv-chip wmv-on';
+      all.textContent = 'Tout afficher';
+      info.appendChild(all);
+      bar.appendChild(info);
+    }
   }
+  // non lue = surlignée par le site (fond « accent »)
+  function isUnread(a) { return /bg-\[var\(--color-accent\)\]/.test(a.className); }
+  let notifFilter = 'all';
   let lastBar = '';
 
   // ---------- 6. panneau « Vente » ----------
