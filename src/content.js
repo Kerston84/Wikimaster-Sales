@@ -777,8 +777,8 @@
         tr.appendChild(el('td', 'wmv-dim', String(i + 1)));
         const name = el('td');
         if (r.r) name.appendChild(el('span', 'wmv-rtag wmv-r-' + r.r, r.r));
-        const nb = el('button', 'wmv-link', r.t); nb.type = 'button'; nb.title = 'Montrer la carte si elle est sur la page';
-        nb.onclick = () => showCard(r.t);
+        const nb = el('button', 'wmv-link', r.t); nb.type = 'button'; nb.title = 'Ouvrir la fiche de cette carte, prête à « Mettre aux enchères »';
+        nb.onclick = () => openSale(r.t);
         name.appendChild(nb);
         tr.appendChild(name);
         tr.appendChild(el('td', null, r.buy != null ? fmt(r.buy) : '—'));
@@ -847,14 +847,6 @@
     const foot = el('div', 'wmv-foot');
     foot.appendChild(el('span', 'wmv-dim', 'Prix d\'achat « — » = inconnu (compté comme 0 dans le gain, comme une carte de paquet). L\'extension n\'interroge jamais le jeu.'));
     p.appendChild(foot);
-  }
-
-  function showCard(title) {
-    const h = [...document.querySelectorAll('main h3')].find((x) => x.textContent.trim() === title);
-    const card = h && (h.closest('.group') || h.closest('a'));
-    if (!card) { toast('Cette carte n\'est pas sur la page affichée. Cherche « ' + title + ' » dans ta Collection.'); return; }
-    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    card.classList.remove('wmv-flash'); void card.offsetWidth; card.classList.add('wmv-flash');
   }
 
   function toast(text) {
@@ -980,6 +972,68 @@
     }
   }
 
+  // ---------- 9. clic sur une carte du panneau : ouvrir sa fiche, prête à « Mettre aux enchères » ----------
+  // Fait seulement ce que tu ferais à la main : chercher la carte dans ta Collection et ouvrir sa fiche.
+  // Le bouton « Mettre aux enchères » est mis en évidence, mais c'est TOI qui cliques dessus (aucune vente automatique).
+  const GOTO_KEY = 'wmv-goto';
+  function openSale(title) {
+    closePanel();
+    if (!/^\/collection/.test(location.pathname)) {
+      try { sessionStorage.setItem(GOTO_KEY, JSON.stringify({ t: title, at: Date.now() })); } catch (e) { /* rien */ }
+      location.href = '/collection';
+      return;
+    }
+    findAndOpen(title);
+  }
+  function resumeGoto() {
+    let g = null;
+    try { g = JSON.parse(sessionStorage.getItem(GOTO_KEY) || 'null'); sessionStorage.removeItem(GOTO_KEY); } catch (e) { /* rien */ }
+    if (g && g.t && Date.now() - g.at < 60e3 && /^\/collection/.test(location.pathname)) findAndOpen(g.t);
+  }
+  function findTile(title) { return pageCards().find((c) => titleIn(c) === title); }
+  function findAndOpen(title) {
+    const m = cardModal();
+    if (m) { const x = m.ov.querySelector('button[aria-label="Fermer"]'); if (x) x.click(); }
+    let tries = 0, typed = false;
+    const step = () => {
+      const tile = findTile(title);
+      if (tile) { (tile.firstElementChild || tile).click(); waitSellButton(title); return; }
+      // pas sur la page : on tape son nom dans la recherche de la Collection (comme toi)
+      const input = [...document.querySelectorAll('main input[type="text"], input[placeholder*="Rechercher"]')].find((i) => !i.closest('.wmv-panel'));
+      if (input && !typed) {
+        typed = true;
+        input.focus();
+        input.value = title;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      if (++tries < 40) setTimeout(step, 150);
+      else toast('Carte « ' + title + ' » introuvable dans ta Collection (déjà vendue ou échangée ?).');
+    };
+    step();
+  }
+  function waitSellButton(title) {
+    let tries = 0;
+    const look = () => {
+      const m = cardModal();
+      const h = m && m.frame.querySelector('h2');
+      if (m && h && h.textContent.trim() === title) {
+        const det = [...m.frame.querySelectorAll('[role="tab"]')].find((x) => /^d[ée]tails$/i.test(x.textContent.trim()));
+        if (det && det.getAttribute('aria-selected') !== 'true') det.click();
+        const b = [...m.ov.querySelectorAll('button')].find((x) => /mettre aux ench/i.test(x.textContent));
+        if (b) {
+          b.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          b.classList.remove('wmv-sellhint'); void b.offsetWidth; b.classList.add('wmv-sellhint');
+          toast('Fiche ouverte : clique sur « Mettre aux enchères » pour la vendre.');
+          return;
+        }
+        if (m.ov.querySelector('button[aria-label^="Retirer des favoris"]')) { toast('« ' + title + ' » est en favori (verrouillée) : retire-la des favoris pour pouvoir la vendre.'); return; }
+      }
+      if (++tries < 30) setTimeout(look, 100);
+    };
+    look();
+  }
+
   // ---------- boucle principale ----------
   let timer = null;
   // au plus une lecture toutes les 300 ms (la page change sans arrêt : comptes à rebours…)
@@ -1009,6 +1063,7 @@
 
   ready.then(() => {
     run();
+    setTimeout(resumeGoto, 600);
     new MutationObserver((muts) => {
       // on ignore nos propres changements
       if (muts.every((m) => [...m.addedNodes, ...m.removedNodes].every((n) => n.nodeType === 1 && /\bwmv-/.test(n.className || '')) || (m.target.closest && m.target.closest('.wmv-panel, .wmv-nbar, .wmv-nbadge, .wmv-cprice, .wmv-mprice')))) return;

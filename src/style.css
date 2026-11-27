@@ -166,3 +166,7 @@ a.wmv-unread { opacity: 1 !important; filter: none !important; box-shadow: inset
 .wmv-cprice { position: absolute; left: 8px; top: calc(45% - 24px); z-index: 35; }
 .wmv-mprice { margin-top: 6px; font-size: 12px; line-height: 18px; }
 .wmv-cprice .wmv-age, .wmv-mprice .wmv-age { margin-right: 0; }
+
+/* « Mettre aux enchères » mis en évidence après un clic dans le panneau */
+.wmv-sellhint { animation: wmv-sellhint 1.2s ease-out 3; border-radius: 10px; }
+@keyframes wmv-sellhint { 0% { box-shadow: 0 0 0 0 rgba(251,191,36,.9); } 70% { box-shadow: 0 0 0 10px rgba(251,191,36,0); } 100% { box-shadow: 0 0 0 0 rgba(251,191,36,0); } }
