@@ -1,6 +1,8 @@
 # 💰 WikiMasters Vente
 
-Extension de navigateur **non officielle, non affiliée à WikiMasters**, pour [WikiMasters](https://www.wiki-masters.com) : des notifications plus claires (les enchères déjà terminées sont grisées) et un panneau qui t'aide à savoir quelles cartes vendre en priorité.
+Extension de navigateur **non officielle, non affiliée à WikiMasters**, pour [WikiMasters](https://www.wiki-masters.com) : un panneau qui t'aide à savoir quelles cartes vendre en priorité, et qui garde la liste de tes cartes vendues.
+
+> 🔔 Les **notifications** (filtres, enchères terminées grisées, « Supprimer les notifs cliquées ») sont maintenant dans une extension à part : **WikiMasters Notifications**. Tu peux installer les deux, ou une seule.
 
 > L'extension **lit seulement les pages que tu ouvres** et change l'affichage chez toi. Elle n'envoie aucune requête aux serveurs du jeu, ne clique jamais à ta place, ne vend et n'achète rien. Les autres joueurs ne voient rien.
 
@@ -11,25 +13,6 @@ Fonctionne sur **Chrome, Brave, Edge** et **Firefox**.
 ---
 
 ## ✨ Ce que fait l'extension
-
-### 🔔 Notifications étendues
-| Fonction | Détail |
-|---|---|
-| **Fenêtre plus grande** | La liste des notifications est plus large et plus haute. |
-| **Filtres** | Boutons *Tout / Souhaits / Surenchéri / Gagnées / Terminées*, avec le nombre de chaque. |
-| **Couleurs** | Chaque type de notification a sa couleur. |
-| **Enchères finies en gris** | Une notification « Liste de souhaits » dont l'enchère est finie est **grisée**, qu'elle soit vendue (« ✓ Vendue · 120 W ») ou non (« ✗ Terminée, non vendue »). Plus besoin de cliquer pour vérifier. |
-| **Déjà ouvertes en gris** | Une notification sur laquelle tu as cliqué (ou dont tu as ouvert l'enchère) est grisée avec « 👁 Vue » : tu vois d'un coup d'œil ce que tu as déjà vérifié. |
-| **Temps restant** | Si l'enchère est encore en cours : « ⏱ Encore 35 min ». |
-| **Masquer les terminées** | Un bouton les cache complètement. |
-
-**Comment l'extension sait qu'une enchère est finie**, sans rien demander au jeu :
-- tu as déjà ouvert l'enchère (même une seule fois) ;
-- tu l'as vue au marché avec son temps restant, et ce temps est écoulé ;
-- une notification « Enchère terminée » ou « Enchère gagnée » en parle ;
-- sinon, la notification a plus de 24 h (réglable) : elle est marquée « ⌛ Sûrement terminée ».
-
-**Supprimer les notifs cliquées** : coche la case ☐ dans la barre de la cloche (ou dans les réglages de l'extension). Chaque notification que tu ouvres disparaît alors de ta liste. Décoche pour les revoir. Rien n'est effacé sur le site.
 
 ### ‹ › Flèches dans la fiche d'une carte (Collection)
 Quand tu ouvres une carte dans ta Collection, deux flèches apparaissent de chaque côté : **›** ouvre la carte suivante de la page, **‹** la précédente (ou les touches ← et → du clavier). L'onglet reste le même : si tu es sur « Marché », la carte suivante s'ouvre aussi sur « Marché », pratique pour relever les prix. La flèche fait seulement ce que tu ferais en cliquant sur la carte voisine.
@@ -49,7 +32,6 @@ Quand tu ouvres une carte dans ta Collection, deux flèches apparaissent de chaq
 Quand tu ouvres la cloche et qu'une notification dit « Votre carte « X » a été vendue pour N wikibidous », l'extension :
 - range la carte dans l'onglet **« ✓ Cartes vendues »** avec la date, l'heure, le prix d'achat, le prix de vente et le gain ;
 - la retire de l'onglet **« À vendre »** (ou enlève un exemplaire si tu en avais plusieurs) ;
-- ajoute « 💰 Rangée dans « Cartes vendues » · gain » sur la notification.
 
 Limite : le site ne garde qu'un nombre limité de notifications, pense à ouvrir la cloche de temps en temps. Prix d'achat inconnu = compté 0 (comme une carte de paquet).
 
@@ -70,8 +52,8 @@ Télécharge le fichier qui correspond à ton navigateur dans le dossier [`telec
 
 | Navigateur | Fichier |
 |---|---|
-| Chrome, Brave, Edge | `wikimasters-vente-1.7.1-chrome-brave-edge.zip` |
-| Firefox | `wikimasters-vente-1.7.1-firefox.zip` |
+| Chrome, Brave, Edge | `wikimasters-vente-2.0.0-chrome-brave-edge.zip` |
+| Firefox | `wikimasters-vente-2.0.0-firefox.zip` |
 
 
 ### Chrome / Brave / Edge
@@ -94,6 +76,7 @@ Télécharge le fichier qui correspond à ton navigateur dans le dossier [`telec
 **Firefox** : recharge le nouveau zip depuis `about:debugging`.
 
 ## 🆕 Nouveautés
+- **2.0.0** : l'extension est coupée en deux. Celle-ci garde le panneau Vente, les cartes vendues, les pastilles de prix et les flèches ‹ ›. Tout l'affichage des notifications part dans la nouvelle extension **WikiMasters Notifications** (à installer à part). Les « Carte vendue » sont toujours lues ici pour remplir l'onglet « Cartes vendues ».
 - **1.7.1** : bouton ✕ au bout de chaque ligne du panneau Vente pour retirer une carte de la liste à la main. « ↩ Tout remettre » (sous les filtres) les fait revenir. Rien ne change sur le site.
 - **1.7.0** : un clic sur une carte dans le panneau Vente ouvre sa fiche dans ta Collection (recherche par son nom si elle n'est pas sur la page) et fait clignoter le bouton « Mettre aux enchères ». C'est toi qui cliques dessus : l'extension ne met jamais rien en vente à ta place.
 - **1.6.1** : la pastille de prix apparaît aussi sur les cartes elles-mêmes : étiquette « ● 120 W » sur chaque carte de la Collection dont le prix a été relevé, et sous le nom dans la fiche ouverte.
@@ -110,7 +93,7 @@ Télécharge le fichier qui correspond à ton navigateur dans le dossier [`telec
 - **1.0.0** : première version.
 
 ## ⚙ Réglages et sauvegarde
-Clique sur l'icône de l'extension (pièce de puzzle → *WikiMasters Vente*) : options des notifications, exclusions, **export / import** d'une sauvegarde, remise à zéro.
+Clique sur l'icône de l'extension (pièce de puzzle → *WikiMasters Vente*) : exclusions, **export / import** d'une sauvegarde, remise à zéro.
 
 ---
 

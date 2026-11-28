@@ -10,13 +10,13 @@ from pathlib import Path
 ROOT = Path(__file__).parent
 SRC = ROOT / 'src'
 DIST = ROOT / 'dist'
-VERSION = '1.7.1'
+VERSION = '2.0.0'
 
 base = {
     'manifest_version': 3,
     'name': 'WikiMasters Vente',
     'version': VERSION,
-    'description': "Non officiel : notifications plus claires (enchères terminées grisées) et panneau de prix et de priorités de vente pour WikiMasters.",
+    'description': "Non officiel : panneau de prix, de priorités de vente et de cartes vendues pour WikiMasters.",
     'icons': {'16': 'icon16.png', '48': 'icon48.png', '128': 'icon128.png'},
     # unlimitedStorage : les grosses collections dépassent vite 10 Mo
     'permissions': ['storage', 'unlimitedStorage'],

@@ -1,7 +1,7 @@
 // Page de réglages de WikiMasters Vente
 const ext = globalThis.browser || globalThis.chrome;
 const KEYS = ['wmv-listings', 'wmv-buys', 'wmv-sales', 'wmv-rarity', 'wmv-coll', 'wmv-prices', 'wmv-sold', 'wmv-removed', 'wmv-settings'];
-const DEFAULTS = { panelTab: 'active', hideEnded: false, hideClicked: false, notifType: 'all', excludeTags: true, excludeFav: true, staleHours: 24, panelRarity: 'all', sortKey: 'ref', sortDir: 'desc' };
+const DEFAULTS = { panelTab: 'active', excludeTags: true, excludeFav: true, panelRarity: 'all', sortKey: 'ref', sortDir: 'desc' };
 const $ = (id) => document.getElementById(id);
 
 function status(text) {
@@ -12,11 +12,8 @@ function status(text) {
 async function load() {
   const r = await ext.storage.local.get(KEYS);
   const s = { ...DEFAULTS, ...(r['wmv-settings'] || {}) };
-  $('hideEnded').checked = !!s.hideEnded;
-  $('hideClicked').checked = !!s.hideClicked;
   $('excludeFav').checked = !!s.excludeFav;
   $('excludeTags').checked = !!s.excludeTags;
-  $('staleHours').value = s.staleHours;
   const count = (k) => Object.keys(r[k] || {}).length;
   $('stats').textContent = `${count('wmv-coll')} carte(s) de ta collection · ${count('wmv-prices')} prix de carte relevés · ${count('wmv-sold')} carte(s) vendue(s) · ${count('wmv-buys')} prix d'achat · ` +
     `${count('wmv-sales')} carte(s) avec des ventes vues · ${count('wmv-listings')} enchère(s) suivie(s)`;
@@ -25,15 +22,12 @@ async function load() {
 async function saveSettings() {
   const r = await ext.storage.local.get('wmv-settings');
   const s = { ...DEFAULTS, ...(r['wmv-settings'] || {}) };
-  s.hideEnded = $('hideEnded').checked;
-  s.hideClicked = $('hideClicked').checked;
   s.excludeFav = $('excludeFav').checked;
   s.excludeTags = $('excludeTags').checked;
-  s.staleHours = Math.min(168, Math.max(1, parseInt($('staleHours').value, 10) || 24));
   await ext.storage.local.set({ 'wmv-settings': s });
   status('Enregistré ✓');
 }
-for (const id of ['hideEnded', 'hideClicked', 'excludeFav', 'excludeTags', 'staleHours']) $(id).addEventListener('change', saveSettings);
+for (const id of ['excludeFav', 'excludeTags']) $(id).addEventListener('change', saveSettings);
 
 $('export').addEventListener('click', async () => {
   const r = await ext.storage.local.get(KEYS);

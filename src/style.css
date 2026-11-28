@@ -1,40 +1,3 @@
-/* ===== Notifications étendues ===== */
-.wmv-notif-root { width: min(440px, 92vw) !important; max-width: none !important; max-height: 80vh !important; }
-.wmv-notif-list { max-height: 68vh !important; }
-.wmv-nbar {
-  display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 10px 8px;
-  border-bottom: 1px solid rgba(255,255,255,.08); font-family: system-ui, sans-serif;
-}
-.wmv-chip {
-  border: 1px solid #3f3f46; background: #18181b; color: #d4d4d8; border-radius: 999px;
-  padding: 2px 9px; font-size: 11px; line-height: 18px; cursor: pointer;
-}
-.wmv-chip:hover { border-color: #71717a; }
-.wmv-chip.wmv-on { background: #14532d; border-color: #22c55e; color: #fff; }
-.wmv-chip.wmv-toggle { margin-left: auto; }
-
-/* couleur du type de notification */
-a[data-wmv-type="liste de souhaits"] > div > p:first-child { color: #f472b6 !important; }
-a[data-wmv-type="surenchéri"] > div > p:first-child { color: #fb923c !important; }
-a[data-wmv-type="enchère gagnée"] > div > p:first-child { color: #4ade80 !important; }
-a[data-wmv-type="enchère terminée"] > div > p:first-child { color: #a1a1aa !important; }
-
-.wmv-nbadge {
-  display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 6px;
-  font-size: 10px; line-height: 16px; letter-spacing: 0; text-transform: none; font-weight: 600; vertical-align: 1px;
-}
-a.wmv-done { opacity: .38; filter: grayscale(1); }
-a.wmv-done:hover { opacity: .75; }
-a.wmv-done .wmv-nbadge { background: #3f3f46; color: #e4e4e7; }
-a.wmv-maybe { opacity: .6; }
-a.wmv-maybe .wmv-nbadge { background: #422006; color: #fcd34d; }
-a.wmv-live .wmv-nbadge { background: #14532d; color: #bbf7d0; }
-/* notification déjà ouverte */
-a.wmv-checked { opacity: .45; filter: grayscale(1); }
-a.wmv-checked:hover { opacity: .8; }
-a.wmv-checked .wmv-nbadge { background: #3f3f46; color: #e4e4e7; }
-a.wmv-hidden { display: none !important; }
-
 /* ===== Bouton et panneau « Vente » ===== */
 .wmv-fab {
   position: fixed; left: 14px; bottom: 14px; z-index: 2147483000;
@@ -136,20 +99,6 @@ a.wmv-hidden { display: none !important; }
 .wmv-sold-table td.wmv-pos { color: #4ade80; }
 .wmv-sold-table td.wmv-neg { color: #f87171; }
 
-/* ===== 1.5.1 : lisibilité ===== */
-/* grisé plus doux : le texte reste lisible, la pastille garde ses couleurs */
-a.wmv-done, a.wmv-checked { opacity: .62 !important; filter: grayscale(.85); }
-a.wmv-done:hover, a.wmv-checked:hover { opacity: .95 !important; filter: none; }
-.wmv-nbadge { font-size: 11px; line-height: 17px; }
-a[data-wmv-type="carte vendue"] > div > p:first-child { color: #fbbf24 !important; }
-/* non lue : bien visible */
-a.wmv-unread { opacity: 1 !important; filter: none !important; box-shadow: inset 3px 0 #22c55e; }
-.wmv-ninfo {
-  flex-basis: 100%; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
-  font-size: 11px; color: #fcd34d; padding-top: 2px;
-}
-.wmv-chip { font-size: 12px; }
-.wmv-notif-list > .wmv-hidden { display: none !important; }
 
 /* pastille d'âge du prix relevé */
 .wmv-age { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }

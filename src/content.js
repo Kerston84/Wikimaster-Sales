@@ -23,7 +23,7 @@
   // prices   : prix de la carte, lu dans son onglet « Marché » { titre: { p: moyenne de la semaine, lo, hi, n: ventes, r, at } }
   // sold     : TES ventes, lues dans les notifications « Carte vendue » { idEnchère: { t: titre, p: prix de vente, at: date, buy: prix d'achat, r } }
   const KEYS = ['wmv-listings', 'wmv-buys', 'wmv-sales', 'wmv-rarity', 'wmv-coll', 'wmv-prices', 'wmv-sold', 'wmv-removed', 'wmv-settings'];
-  const DEFAULTS = { panelTab: 'active', hideEnded: false, hideClicked: false, notifType: 'all', excludeTags: true, excludeFav: true, staleHours: 24, panelRarity: 'all', sortKey: 'ref', sortDir: 'desc' };
+  const DEFAULTS = { panelTab: 'active', excludeTags: true, excludeFav: true, panelRarity: 'all', sortKey: 'ref', sortDir: 'desc' };
   const db = { listings: {}, buys: {}, sales: {}, rarity: {}, coll: {}, prices: {}, sold: {}, removed: {}, settings: { ...DEFAULTS } };
   const dirty = new Set();
   const ownWrites = {}; // nos propres écritures : on ne les relit pas (sinon on perdrait ce qui a changé entre-temps)
@@ -324,15 +324,9 @@
     }
   }
 
-  // ---------- 5. notifications étendues ----------
-  const TYPE_KEYS = [
-    ['all', 'Tout'],
-    ['liste de souhaits', 'Souhaits'],
-    ['surenchéri', 'Surenchéri'],
-    ['enchère gagnée', 'Gagnées'],
-    ['enchère terminée', 'Terminées'],
-    ['carte vendue', 'Vendues'],
-  ];
+  // ---------- 5. cartes vendues (lues dans les notifications) ----------
+  // l'affichage des notifications est fait par l'autre extension « WikiMasters Notifications » ;
+  // ici on lit seulement les « Carte vendue » pour remplir l'onglet « Cartes vendues ».
   // les notifications = les liens vers une enchère, hors de la page principale, regroupés dans une même liste
   function notifLinks() {
     const links = [...document.querySelectorAll('a[href^="/marketplace/"]')].filter((a) => !a.closest('main') && a.querySelectorAll('p').length >= 2);
@@ -342,35 +336,17 @@
     for (const [p, c] of byParent) if (c > n) { best = p; n = c; }
     return links.filter((a) => a.parentElement === best);
   }
-  // texte d'un élément sans nos propres pastilles
+  // texte d'un élément sans les pastilles ajoutées par une extension
   function ownText(n) {
     if (!n) return '';
     let t = '';
     for (const c of n.childNodes) {
       if (c.nodeType === 3) t += c.nodeValue;
-      else if (c.nodeType === 1 && !c.classList.contains('wmv-nbadge')) t += ownText(c);
+      else if (c.nodeType === 1 && !/\bwm[nv]-/.test(c.className || '')) t += ownText(c);
     }
     return t;
   }
   function notifType(a) { return ownText(a.querySelector('p')).trim().toLowerCase(); }
-
-  // état d'une enchère : 'done' (terminée/vendue), 'maybe' (sûrement terminée), 'live' (en cours) ou null (inconnu)
-  function stateOf(id, notifTime) {
-    const l = db.listings[id];
-    if (l) {
-      if (l.st && l.st !== 'active') return { s: 'done', l };
-      if (l.end && l.end <= Date.now()) return { s: 'done', l };
-      if (l.end) return { s: 'live', l };
-    }
-    if (notifTime && Date.now() - notifTime > db.settings.staleHours * 3600e3) return { s: 'maybe', l };
-    return { s: null, l };
-  }
-  function left(ms) {
-    const m = Math.round(ms / 60e3);
-    if (m < 60) return m + ' min';
-    const h = Math.floor(m / 60);
-    return h < 24 ? h + ' h ' + String(m % 60).padStart(2, '0') : Math.floor(h / 24) + ' j ' + (h % 24) + ' h';
-  }
 
   // une de TES cartes vendue (lu dans la notification, rien n'est demandé au jeu)
   function addSold(id, text, when) {
@@ -401,172 +377,21 @@
     return { n, last };
   }
 
-  function decorateNotifications() {
-    const links = notifLinks();
-    if (!links.length) return;
-    const list = links[0].parentElement;
-    const root = list.parentElement;
-    if (root && !root.classList.contains('wmv-notif-root')) {
-      root.classList.add('wmv-notif-root');
-      list.classList.add('wmv-notif-list');
-    }
-
-    const counts = {};
-    let hiddenDone = 0, hiddenSeen = 0, hiddenAll = 0, unreadN = 0;
-    for (const a of links) {
+  function readSoldNotifications() {
+    for (const a of notifLinks()) {
       const id = listingId(a);
+      if (!id) continue;
       const type = notifType(a);
-      counts[type] = (counts[type] || 0) + 1;
-      a.dataset.wmvType = type;
       const ps = a.querySelectorAll('p');
-      const text = ps[1] ? ps[1].textContent : '';
-      const when = frDate(ps[2] ? ps[2].textContent : '');
-
       // ces notifications prouvent que l'enchère est finie
-      if (id && (type === 'enchère gagnée' || type === 'enchère terminée')) {
+      if (type === 'enchère gagnée' || type === 'enchère terminée') {
         const l = db.listings[id];
         if (!l || !l.st || l.st === 'active') setListing(id, { st: 'ended' });
       }
       // « Votre carte « X » a été vendue pour N wikibidous » : on la range dans « Cartes vendues »
-      if (id && type === 'carte vendue') addSold(id, text, when);
-      if (id && type === 'liste de souhaits') {
-        const t = (text.match(/^(.+?) vient d'être mise en vente/) || [])[1];
-        if (t && !(db.listings[id] && db.listings[id].t)) setListing(id, { t });
-      }
-
-      let badge = '', cls = '';
-      if (id && type === 'carte vendue' && db.sold[id]) {
-        const g = soldGain(db.sold[id]);
-        badge = '💰 Rangée dans « Cartes vendues »' + (g != null ? ' · gain ' + (g > 0 ? '+' : '') + fmt(g) + ' W' : '');
-      }
-      if (id && type === 'liste de souhaits') {
-        const { s, l } = stateOf(id, when);
-        if (s === 'done') {
-          // enchère finie (vendue, non vendue ou issue inconnue) : grisée, inutile de cliquer
-          cls = 'wmv-done';
-          badge = l && l.st === 'sold' ? '✓ Vendue' + (l.p != null ? ' · ' + l.p.toLocaleString('fr-FR') + ' W' : '')
-            : l && l.st === 'unsold' ? '✗ Terminée, non vendue' : '✓ Terminée';
-        }
-        else if (s === 'maybe') { cls = 'wmv-maybe'; badge = '⌛ Sûrement terminée'; }
-        else if (s === 'live') { cls = 'wmv-live'; badge = '⏱ Encore ' + left(l.end - Date.now()); }
-      }
-      // déjà ouverte (clic sur la notification ou page de l'enchère vue) : grisée aussi
-      const checked = !!(id && db.listings[id] && db.listings[id].v) && !isUnread(a);
-      a.classList.toggle('wmv-checked', checked && cls !== 'wmv-done');
-      if (checked && cls !== 'wmv-done') badge = (badge ? badge + ' · ' : '') + '👁 Vue';
-      a.classList.toggle('wmv-done', cls === 'wmv-done');
-      a.classList.toggle('wmv-sold', cls === 'wmv-sold');
-      a.classList.toggle('wmv-maybe', cls === 'wmv-maybe');
-      a.classList.toggle('wmv-live', cls === 'wmv-live');
-      let b = a.querySelector('.wmv-nbadge');
-      if (badge) {
-        if (!b) { b = document.createElement('span'); b.className = 'wmv-nbadge'; (ps[0] || a).appendChild(b); }
-        if (b.textContent !== badge) b.textContent = badge;
-      } else if (b) b.remove();
-
-      // notification pas encore lue (le site la surligne) : jamais cachée, jamais grisée
-      const unread = isUnread(a);
-      a.classList.toggle('wmv-unread', unread);
-      if (unread) { a.classList.remove('wmv-done', 'wmv-checked', 'wmv-maybe'); unreadN++; }
-      const f = notifFilter;
-      const hideByType = f !== 'all' && type !== f;
-      const hideDone = db.settings.hideEnded && (cls === 'wmv-done' || cls === 'wmv-sold' || cls === 'wmv-maybe');
-      // réglage « supprimer les notifications une fois cliquées » : masquées chez toi (rien n'est effacé sur le site)
-      const hideSeen = db.settings.hideClicked && checked;
-      // le filtre que tu choisis (Souhaits, Gagnées…) s'applique toujours ; seuls les masquages automatiques épargnent les non lues
-      const hide = hideByType || (!unread && (hideDone || hideSeen));
-      if (!unread && !hideByType && hideSeen) hiddenSeen++;
-      if (!unread && !hideByType && hideDone && !hideSeen) hiddenDone++;
-      if (hide) hiddenAll++;
-      a.classList.toggle('wmv-hidden', hide);
-    }
-    // les autres notifications du site (échange accepté…) : cachées quand tu filtres par type
-    const mine = new Set(links);
-    for (const o of list.children) {
-      if (mine.has(o)) continue;
-      const hideOther = notifFilter !== 'all';
-      o.classList.toggle('wmv-hidden', hideOther);
-      if (hideOther) hiddenAll++;
-    }
-    renderNotifBar(list, counts, hiddenDone, links.length, hiddenSeen, hiddenAll, unreadN);
-  }
-
-  // clic sur une notification : on la retient comme « vue »
-  document.addEventListener('click', (e) => {
-    const a = e.target.closest && e.target.closest('a[href^="/marketplace/"]');
-    if (!a || a.closest('main') || !a.dataset.wmvType) return;
-    const id = listingId(a);
-    if (id && !(db.listings[id] && db.listings[id].v)) { setListing(id, { v: 1 }); save(); }
-    a.classList.add('wmv-checked');
-    // on la fait disparaître juste après le clic (le site a déjà reçu ton clic et ouvre l'enchère)
-    if (db.settings.hideClicked) setTimeout(() => { a.classList.add('wmv-hidden'); lastBar = ''; schedule(); }, 150);
-  }, true);
-
-  function renderNotifBar(list, counts, hiddenDone, total, hiddenSeen, hiddenAll, unreadN) {
-    let bar = list.parentElement.querySelector(':scope > .wmv-nbar');
-    if (!bar) {
-      bar = document.createElement('div');
-      bar.className = 'wmv-nbar';
-      list.parentElement.insertBefore(bar, list);
-      bar.addEventListener('click', (e) => {
-        const btn = e.target.closest('button');
-        if (!btn) return;
-        e.preventDefault(); e.stopPropagation();
-        if (btn.dataset.type) notifFilter = btn.dataset.type; // filtre valable sur cette page seulement
-        if (btn.dataset.showall) { notifFilter = 'all'; db.settings.hideEnded = false; db.settings.hideClicked = false; }
-        if (btn.dataset.toggle) db.settings.hideEnded = !db.settings.hideEnded;
-        if (btn.dataset.seen) db.settings.hideClicked = !db.settings.hideClicked;
-        mark('settings');
-        lastBar = '';
-        decorateNotifications();
-      });
-    }
-    const key = JSON.stringify([counts, hiddenDone, total, notifFilter, db.settings.hideEnded, db.settings.hideClicked, hiddenSeen, hiddenAll, unreadN]);
-    if (key === lastBar && bar.childElementCount) return;
-    lastBar = key;
-    bar.textContent = '';
-    for (const [k, label] of TYPE_KEYS) {
-      const n = k === 'all' ? total : (counts[k] || 0);
-      if (k !== 'all' && !n) continue;
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.dataset.type = k;
-      btn.className = 'wmv-chip' + (notifFilter === k ? ' wmv-on' : '');
-      btn.textContent = label + ' ' + n;
-      bar.appendChild(btn);
-    }
-    const t = document.createElement('button');
-    t.type = 'button';
-    t.dataset.toggle = '1';
-    t.className = 'wmv-chip wmv-toggle' + (db.settings.hideEnded ? ' wmv-on' : '');
-    t.textContent = db.settings.hideEnded ? '👁 Afficher les terminées' + (hiddenDone ? ' (' + hiddenDone + ')' : '') : '🙈 Masquer les terminées';
-    bar.appendChild(t);
-    // case à cocher (un bouton ☐ / ☑ : un vrai <input> se cocherait deux fois dans ce menu)
-    const c = document.createElement('button');
-    c.type = 'button';
-    c.dataset.seen = '1';
-    c.className = 'wmv-chip wmv-seen' + (db.settings.hideClicked ? ' wmv-on' : '');
-    c.title = 'Masque chez toi les notifications déjà ouvertes (le site, lui, les garde)';
-    c.setAttribute('role', 'checkbox');
-    c.setAttribute('aria-checked', db.settings.hideClicked ? 'true' : 'false');
-    c.textContent = (db.settings.hideClicked ? '☑' : '☐') + ' Supprimer les notifs cliquées' + (db.settings.hideClicked && hiddenSeen ? ' (' + hiddenSeen + ')' : '');
-    bar.appendChild(c);
-    // explication quand des notifications sont cachées (sinon la liste paraît vide)
-    if (hiddenAll) {
-      const info = document.createElement('div');
-      info.className = 'wmv-ninfo';
-      info.textContent = hiddenAll + ' notification(s) cachée(s) par tes filtres ';
-      const all = document.createElement('button');
-      all.type = 'button'; all.dataset.showall = '1'; all.className = 'wmv-chip wmv-on';
-      all.textContent = 'Tout afficher';
-      info.appendChild(all);
-      bar.appendChild(info);
+      if (type === 'carte vendue') addSold(id, ps[1] ? ps[1].textContent : '', frDate(ps[2] ? ps[2].textContent : ''));
     }
   }
-  // non lue = surlignée par le site (fond « accent »)
-  function isUnread(a) { return /bg-\[var\(--color-accent\)\]/.test(a.className); }
-  let notifFilter = 'all';
-  let lastBar = '';
 
   // ---------- 6. panneau « Vente » ----------
   function refPrice(title) {
@@ -1070,7 +895,7 @@
       readListingPage();
       readCardPrices();
       readCollection();
-      decorateNotifications();
+      readSoldNotifications();
       decorateCardModal();
       decorateCardPrices();
       ensureFab();
@@ -1088,7 +913,7 @@
     setTimeout(resumeGoto, 600);
     new MutationObserver((muts) => {
       // on ignore nos propres changements
-      if (muts.every((m) => [...m.addedNodes, ...m.removedNodes].every((n) => n.nodeType === 1 && /\bwmv-/.test(n.className || '')) || (m.target.closest && m.target.closest('.wmv-panel, .wmv-nbar, .wmv-nbadge, .wmv-cprice, .wmv-mprice')))) return;
+      if (muts.every((m) => [...m.addedNodes, ...m.removedNodes].every((n) => n.nodeType === 1 && /\bwm[vn]-/.test(n.className || '')) || (m.target.closest && m.target.closest('.wmv-panel, .wmv-cprice, .wmv-mprice, .wmn-nbar, .wmn-nbadge')))) return;
       schedule();
     }).observe(document.body, { childList: true, subtree: true, characterData: true });
     setInterval(schedule, 30e3); // met à jour les « Encore 12 min »
