@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>WikiMasters Notifications — Réglages</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #18181b; color: #eee; max-width: 640px; margin: 40px auto; padding: 0 20px; line-height: 1.5; }
+  h1 { font-size: 22px; }
+  h2 { font-size: 16px; margin-top: 28px; }
+  .box { background: #27272a; border-radius: 12px; padding: 16px 18px; }
+  label { display: block; margin: 6px 0; cursor: pointer; }
+  input[type=number] { width: 70px; padding: 4px 6px; border-radius: 6px; border: 1px solid #3f3f46; background: #09090b; color: #eee; }
+  button { margin: 10px 8px 0 0; padding: 9px 14px; border-radius: 8px; border: 0; background: #16a34a; color: #fff; font-size: 14px; cursor: pointer; }
+  button.grey { background: #3f3f46; }
+  button.red { background: #991b1b; }
+  .dim { color: #a1a1aa; font-size: 13px; }
+  #status { color: #4ade80; margin-left: 6px; }
+  ul { padding-left: 20px; }
+  .warn { background: #451a03; border: 1px solid #f59e0b; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+  <h1>💰 WikiMasters Notifications — Réglages</h1>
+  <div id="perm" class="box warn" style="display:none">
+    <b>⚠ Il faut autoriser l'extension à accéder à WikiMasters.</b>
+    <p class="dim" style="color:#fde68a">Firefox demande cette autorisation à part : sans elle, l'extension ne peut pas lire les pages du jeu.</p>
+    <button id="perm-btn">Autoriser l'accès au site</button>
+  </div>
+
+  <p class="dim">Extension non officielle, non affiliée à WikiMasters. Elle lit seulement les pages que tu ouvres et change l'affichage chez toi : aucun clic automatique, aucune requête aux serveurs du jeu, aucune action sur ton compte.</p>
+
+  <h2>Notifications</h2>
+  <div class="box">
+    <label><input type="checkbox" id="hideEnded"> Masquer les enchères terminées (sinon elles sont seulement grisées)</label>
+    <label><input type="checkbox" id="hideClicked"> Supprimer les notifications une fois cliquées (sinon elles sont seulement grisées avec « 👁 Vue »). Elles disparaissent seulement de ton affichage : le site les garde.</label>
+    <label>Considérer une notification « Liste de souhaits » comme sûrement terminée après
+      <input type="number" id="staleHours" min="1" max="168"> heures</label>
+    <p class="dim">L'extension sait qu'une enchère est finie quand tu l'as déjà ouverte, quand tu l'as vue au marché avec son temps restant, ou quand une notification « Enchère terminée / gagnée » en parle. Sinon elle se base sur l'âge de la notification.</p>
+  </div>
+
+  <h2>Données retenues</h2>
+  <div class="box">
+    <div id="stats" class="dim">…</div>
+    <button id="export">Exporter (sauvegarde)</button>
+    <button id="import" class="grey">Importer une sauvegarde</button>
+    <button id="reset" class="red">Tout effacer</button>
+    <input type="file" id="file" accept=".json,application/json" hidden>
+    <span id="status"></span>
+    <p class="dim">Tu avais déjà « WikiMasters Vente » avant la version 2.0.0 ? Exporte une sauvegarde depuis ses réglages et importe-la ici : tes notifications « 👁 Vue » et tes réglages reviennent.</p>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>
