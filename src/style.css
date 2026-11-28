@@ -170,3 +170,9 @@ a.wmv-unread { opacity: 1 !important; filter: none !important; box-shadow: inset
 /* « Mettre aux enchères » mis en évidence après un clic dans le panneau */
 .wmv-sellhint { animation: wmv-sellhint 1.2s ease-out 3; border-radius: 10px; }
 @keyframes wmv-sellhint { 0% { box-shadow: 0 0 0 0 rgba(251,191,36,.9); } 70% { box-shadow: 0 0 0 10px rgba(251,191,36,0); } 100% { box-shadow: 0 0 0 0 rgba(251,191,36,0); } }
+
+/* ✕ pour retirer une carte du panneau */
+.wmv-rmcell { width: 24px; text-align: center; }
+.wmv-rm { background: none; border: 0; color: #71717a; cursor: pointer; font: inherit; padding: 0 4px; border-radius: 4px; opacity: .55; }
+.wmv-table tr:hover .wmv-rm { opacity: 1; }
+.wmv-rm:hover { color: #fca5a5; background: rgba(239,68,68,.15); }

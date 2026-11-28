@@ -22,9 +22,9 @@
   // coll     : ta collection   { titre: { r, fav, tags: [], n: exemplaires, at, cid } }
   // prices   : prix de la carte, lu dans son onglet « Marché » { titre: { p: moyenne de la semaine, lo, hi, n: ventes, r, at } }
   // sold     : TES ventes, lues dans les notifications « Carte vendue » { idEnchère: { t: titre, p: prix de vente, at: date, buy: prix d'achat, r } }
-  const KEYS = ['wmv-listings', 'wmv-buys', 'wmv-sales', 'wmv-rarity', 'wmv-coll', 'wmv-prices', 'wmv-sold', 'wmv-settings'];
+  const KEYS = ['wmv-listings', 'wmv-buys', 'wmv-sales', 'wmv-rarity', 'wmv-coll', 'wmv-prices', 'wmv-sold', 'wmv-removed', 'wmv-settings'];
   const DEFAULTS = { panelTab: 'active', hideEnded: false, hideClicked: false, notifType: 'all', excludeTags: true, excludeFav: true, staleHours: 24, panelRarity: 'all', sortKey: 'ref', sortDir: 'desc' };
-  const db = { listings: {}, buys: {}, sales: {}, rarity: {}, coll: {}, prices: {}, sold: {}, settings: { ...DEFAULTS } };
+  const db = { listings: {}, buys: {}, sales: {}, rarity: {}, coll: {}, prices: {}, sold: {}, removed: {}, settings: { ...DEFAULTS } };
   const dirty = new Set();
   const ownWrites = {}; // nos propres écritures : on ne les relit pas (sinon on perdrait ce qui a changé entre-temps)
   let saveTimer = null;
@@ -49,6 +49,7 @@
     db.coll = r['wmv-coll'] || {};
     db.prices = r['wmv-prices'] || {};
     db.sold = r['wmv-sold'] || {};
+    db.removed = r['wmv-removed'] || {}; // cartes retirées à la main du panneau { titre: date }
     db.settings = { ...DEFAULTS, ...(r['wmv-settings'] || {}) };
     prune();
   });
@@ -613,7 +614,7 @@
   function rows() {
     const titles = new Set([...Object.keys(db.coll), ...Object.keys(db.buys)]);
     const out = [];
-    let excluded = 0;
+    let excluded = 0, removedN = 0;
     for (const t of titles) {
       const c = db.coll[t] || {};
       const b = db.buys[t];
@@ -622,6 +623,7 @@
       const sold = soldSince(t);
       const remain = (c.n || 1) - sold.n;
       if (remain <= 0) continue;
+      if (db.removed[t]) { removedN++; continue; } // retirée à la main (✕)
       if (db.settings.excludeFav && c.fav) { excluded++; continue; }
       if (db.settings.excludeTags && c.tags && c.tags.length) { excluded++; continue; }
       if (db.settings.panelRarity !== 'all' && r !== db.settings.panelRarity) continue;
@@ -634,7 +636,7 @@
     }
     // priorité : d'abord les doublons, puis le plus gros gain estimé
     sortRows(out);
-    return { list: out, excluded };
+    return { list: out, excluded, removedN };
   }
 
   const fmt = (n) => (n == null ? '—' : n.toLocaleString('fr-FR'));
@@ -745,11 +747,19 @@
     p.appendChild(foot);
 
     function renderTable() {
-      const { list, excluded } = rows();
+      const { list, excluded, removedN } = rows();
       const q = panelSearch.trim().toLowerCase();
       const shown = q ? list.filter((r) => r.t.toLowerCase().includes(q)) : list;
       info.textContent = `${shown.length} carte(s) classée(s)` + (excluded ? ` · ${excluded} exclue(s) (favoris ou étiquettes)` : '') +
         ` · ${Object.keys(db.coll).length} carte(s) de ta collection déjà vues · ${Object.keys(db.buys).length} prix d'achat connus`;
+      if (removedN) {
+        info.appendChild(document.createTextNode(` · ${removedN} retirée(s) à la main `));
+        const back = el('button', 'wmv-link', '↩ Tout remettre');
+        back.type = 'button';
+        back.title = 'Remettre dans la liste les cartes retirées avec ✕';
+        back.onclick = () => { db.removed = {}; mark('removed'); save(); renderTable(); };
+        info.appendChild(back);
+      }
       wrap.textContent = '';
       if (!shown.length) {
         wrap.appendChild(el('div', 'wmv-empty', 'Rien à afficher pour l\'instant. Parcours ta Collection et ouvre l\'onglet « Marché » de tes cartes : l\'extension retient ce qu\'elle voit.'));
@@ -757,8 +767,9 @@
       }
       const table = el('table', 'wmv-table');
       const thead = el('tr');
-      const cols = [['prio', '#'], ['name', 'Carte'], ['buy', 'Achetée'], ['ref', 'Prix de vente'], ['gain', 'Gain estimé'], ['n', 'Ex.']];
+      const cols = [['prio', '#'], ['name', 'Carte'], ['buy', 'Achetée'], ['ref', 'Prix de vente'], ['gain', 'Gain estimé'], ['n', 'Ex.'], ['rm', '']];
       for (const [key, label] of cols) {
+        if (key === 'rm') { thead.appendChild(el('th')); continue; } // colonne du ✕, pas de tri
         const on = db.settings.sortKey === key;
         const th = el('th', 'wmv-sort' + (on ? ' wmv-sorted' : ''), label + (on && key !== 'prio' ? (db.settings.sortDir === 'asc' ? ' ▲' : ' ▼') : ''));
         th.title = key === 'prio' ? 'Ordre conseillé : doublons d\'abord, puis le plus gros gain' : 'Trier (cliquer encore pour inverser)';
@@ -797,6 +808,17 @@
         const g = el('td', r.gain == null ? '' : r.gain >= 0 ? 'wmv-pos' : 'wmv-neg', r.gain == null ? '—' : (r.gain > 0 ? '+' : '') + fmt(r.gain));
         tr.appendChild(g);
         tr.appendChild(el('td', null, r.n ? '×' + r.n : '—'));
+        // ✕ : retirer la carte du panneau (seulement ici, rien ne change sur le site)
+        const rm = el('button', 'wmv-rm', '✕');
+        rm.type = 'button';
+        rm.title = 'Retirer « ' + r.t + ' » du panneau (tu peux la remettre avec « ↩ Tout remettre »)';
+        rm.onclick = (e) => {
+          e.stopPropagation();
+          db.removed[r.t] = Date.now(); mark('removed'); save();
+          renderTable();
+          toast('« ' + r.t + ' » retirée du panneau.');
+        };
+        const td = el('td', 'wmv-rmcell'); td.appendChild(rm); tr.appendChild(td);
         table.appendChild(tr);
       });
       wrap.appendChild(table);
@@ -1053,7 +1075,7 @@
       decorateCardPrices();
       ensureFab();
       if (panelOpen()) {
-        const key = JSON.stringify([Object.keys(db.coll).length, Object.keys(db.buys).length, Object.keys(db.prices).length, Object.keys(db.sales).length, Object.keys(db.sold).length]);
+        const key = JSON.stringify([Object.keys(db.coll).length, Object.keys(db.buys).length, Object.keys(db.prices).length, Object.keys(db.sales).length, Object.keys(db.sold).length, Object.keys(db.removed).length]);
         if (key !== lastPanelKey) { lastPanelKey = key; renderPanel(); }
       }
     } catch (e) {

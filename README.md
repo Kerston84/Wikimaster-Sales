@@ -70,8 +70,8 @@ Télécharge le fichier qui correspond à ton navigateur dans le dossier [`telec
 
 | Navigateur | Fichier |
 |---|---|
-| Chrome, Brave, Edge | `wikimasters-vente-1.7.0-chrome-brave-edge.zip` |
-| Firefox | `wikimasters-vente-1.7.0-firefox.zip` |
+| Chrome, Brave, Edge | `wikimasters-vente-1.7.1-chrome-brave-edge.zip` |
+| Firefox | `wikimasters-vente-1.7.1-firefox.zip` |
 
 
 ### Chrome / Brave / Edge
@@ -94,6 +94,7 @@ Télécharge le fichier qui correspond à ton navigateur dans le dossier [`telec
 **Firefox** : recharge le nouveau zip depuis `about:debugging`.
 
 ## 🆕 Nouveautés
+- **1.7.1** : bouton ✕ au bout de chaque ligne du panneau Vente pour retirer une carte de la liste à la main. « ↩ Tout remettre » (sous les filtres) les fait revenir. Rien ne change sur le site.
 - **1.7.0** : un clic sur une carte dans le panneau Vente ouvre sa fiche dans ta Collection (recherche par son nom si elle n'est pas sur la page) et fait clignoter le bouton « Mettre aux enchères ». C'est toi qui cliques dessus : l'extension ne met jamais rien en vente à ta place.
 - **1.6.1** : la pastille de prix apparaît aussi sur les cartes elles-mêmes : étiquette « ● 120 W » sur chaque carte de la Collection dont le prix a été relevé, et sous le nom dans la fiche ouverte.
 - **1.6.0** : pastille de couleur à côté du prix de vente relevé : 🟢 moins de 6 mois, 🟠 plus de 6 mois, 🔴 plus d'un an. Rouvrir l'onglet « Marché » de la carte remet la pastille au vert.
